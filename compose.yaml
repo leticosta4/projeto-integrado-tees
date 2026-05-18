@@ -1,0 +1,4 @@
+services:
+  tees-test:
+    build: .
+    command: ["uv", "run", "pytest", "--cov", "--durations=0"]
