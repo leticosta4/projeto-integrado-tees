@@ -17,6 +17,9 @@ docker compose down --remove-orphans
 echo "[INFO] Building images..."
 docker compose build
 
+echo "[INFO] Running lint checks..."
+docker compose run --rm tees-lint
+
 echo "[INFO] Running tests..."
 docker compose run --rm tees-test
 

@@ -2,3 +2,7 @@ services:
   tees-test:
     build: .
     command: ["uv", "run", "pytest", "--cov", "--durations=0"]
+
+  tees-lint:
+    build: .
+    command: ["uv", "run", "ty", "check"]
