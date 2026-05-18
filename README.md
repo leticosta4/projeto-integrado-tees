@@ -21,3 +21,5 @@ projeto final de tópicos especiais em engneharia de software
 ## Testando
 
 - `uv run pytest --cov --durations=0`
+
+- Rode com Docker (Bash necessário): `chmod +x ci.sh`, `./ci.sh`
