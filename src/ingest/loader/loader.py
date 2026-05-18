@@ -15,8 +15,8 @@ class Loader:
         xmls_loaded: list[XMLLoaded] = []
         for file in files:
             filename: str = file.name
-            tree: ElementTree[Element[str]] = parse(source=file)
-            with open(file.name, 'rb') as f:
+            tree: ElementTree = parse(source=file) # ty: ignore
+            with open(file, 'rb') as f:
                 filehash = hashlib.md5(f.read()).hexdigest()
 
             xmls_loaded.append(
