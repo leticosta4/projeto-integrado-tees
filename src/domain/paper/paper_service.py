@@ -1,5 +1,5 @@
-from models import Paper
-from paper_dao import PaperDao
+from domain.paper.models import Paper
+from domain.paper.paper_dao import PaperDao
 from psycopg_pool import ConnectionPool
 
 class PaperService:

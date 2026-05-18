@@ -1,6 +1,6 @@
 from psycopg_pool import ConnectionPool
-from researcher_dao import ResearcherDao
-from models import Researcher
+from domain.researcher.researcher_dao import ResearcherDao
+from domain.researcher.models import Researcher
 
 class ResearcherService:
     def __init__(self, pool: ConnectionPool) -> None:
