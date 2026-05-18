@@ -2,7 +2,7 @@ from models import Paper
 from paper_dao import PaperDao
 from psycopg_pool import ConnectionPool
 
-class ResearcherService:
+class PaperService:
     def __init__(self, pool: ConnectionPool) -> None:
         self.dao: PaperDao = PaperDao(pool)
 
