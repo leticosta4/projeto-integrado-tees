@@ -49,7 +49,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - ${PG_PORT:-5432}:${PG_PORT}
+      - ${PG_PORT:-5432}:5432
     networks:
       - tees-network
 
