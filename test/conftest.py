@@ -14,8 +14,25 @@ async def app():
     })
     pool: ConnectionPool = app.config['POOL']
     pool.open()
+
+    # Delete data
+
+    researcher_service: ResearcherService = app.config['RESEARCHER_SERVICE']
+    researcher_service.remove_all_researchers()
+
+    paper_service: PaperService = app.config['PAPER_SERVICE']
+    paper_service.remove_all_papers()
+
     with app.test_app():
         yield app
+
+    # Delete data
+    researcher_service: ResearcherService = app.config['RESEARCHER_SERVICE']
+    researcher_service.remove_all_researchers()
+
+    paper_service: PaperService = app.config['PAPER_SERVICE']
+    paper_service.remove_all_papers()
+
     pool.close()
 
 @pytest.fixture()
