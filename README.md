@@ -10,16 +10,28 @@ projeto final de tópicos especiais em engneharia de software
 
 # Desenvolvendo
 
+- Adicionar `.env` baseado no `env.example`
+
+- Inicie container PGVector:
+
+    - `chmod +x ./scripts/dev.sh`
+
+    - `./scripts/dev.sh`
+
 - Instale uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
 
 - Instalando dependências: `uv sync`
 
 - Instalando o projeto: `uv pip install -e .`
 
-- `uv run src/main.py`
+- Rodando: `uv run src/main.py`
+
+- Criando migrações (se necessário): `uv run yoyo new --sql migrations`
+
+- Rodando migrações: `uv run src/migrate.py`
 
 ## Testando
 
 - `uv run pytest --cov --durations=0`
 
-- Rode com Docker (Bash necessário): `chmod +x ci.sh`, `./ci.sh`
+- Rode com Docker (Bash necessário): `chmod +x ./scripts/ci.sh`, `./ci.sh`

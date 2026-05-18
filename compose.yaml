@@ -1,8 +1,65 @@
+x-test-variables: &test
+  environment:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: mysecretpassword
+    POSTGRES_DB: postgres
+    PG_HOST: tees-test-pgvector
+    PG_PORT: 5432
+  networks:
+    - tees-network
+
 services:
   tees-test:
     build: .
     command: ["uv", "run", "pytest", "--cov", "--durations=0"]
+    <<: *test
 
   tees-lint:
     build: .
     command: ["uv", "run", "ty", "check"]
+    <<: *test
+
+  tees-test-migrations:
+    build: .
+    command: ["uv", "run", "src/migrate.py"]
+    <<: *test
+
+  tees-test-pgvector:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tees-network
+    <<: *test
+
+  tees-pgvector:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - tees_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - ${PG_PORT}:${PG_PORT}
+    networks:
+      - tees-network
+
+  tees-migrations:
+    build: .
+    command: ["uv", "run", "src/migrate.py"]
+    network_mode: host
+
+volumes:
+  tees_data:
+
+networks:
+  tees-network:

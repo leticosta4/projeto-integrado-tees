@@ -16,5 +16,5 @@ jobs:
 
       - name: Run CI script
         run: |
-          chmod +x ci.sh
-          ./ci.sh
+          chmod +x ./scripts/ci.sh
+          ./scripts/ci.sh
