@@ -1,1 +1,2 @@
-#adicionar
+class Transformer:
+    pass
