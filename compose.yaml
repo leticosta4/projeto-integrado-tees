@@ -72,6 +72,18 @@ services:
     network_mode: host
     <<: *dev
 
+  tees-etl:
+    build: .
+    command: ["uv", "run", "src/ingest.py"]
+    network_mode: host
+    <<: *dev
+
+  tees-server:
+    build: .
+    command: ["uv", "run", "src/app.py"]
+    network_mode: host
+    <<: *dev
+
 volumes:
   tees_data:
 

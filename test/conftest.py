@@ -4,36 +4,31 @@ import pytest
 
 from service.researcher import ResearcherService
 from service.paper import PaperService
-from psycopg_pool import ConnectionPool
 
 @pytest.fixture()
-async def app():
-    app = create_app()
+def app():
+    app: Flask = create_app()
     app.config.update({
         'TESTING': True
     })
-    pool: ConnectionPool = app.config['POOL']
-    pool.open()
 
     # Delete data
-
-    researcher_service: ResearcherService = app.config['RESEARCHER_SERVICE']
-    researcher_service.remove_all_researchers()
 
     paper_service: PaperService = app.config['PAPER_SERVICE']
     paper_service.remove_all_papers()
 
-    with app.test_app():
+    researcher_service: ResearcherService = app.config['RESEARCHER_SERVICE']
+    researcher_service.remove_all_researchers()
+
+    with app.app_context():
         yield app
 
     # Delete data
-    researcher_service: ResearcherService = app.config['RESEARCHER_SERVICE']
-    researcher_service.remove_all_researchers()
-
     paper_service: PaperService = app.config['PAPER_SERVICE']
     paper_service.remove_all_papers()
 
-    pool.close()
+    researcher_service: ResearcherService = app.config['RESEARCHER_SERVICE']
+    researcher_service.remove_all_researchers()
 
 @pytest.fixture()
 def client(app: Flask):

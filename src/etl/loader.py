@@ -1,5 +1,6 @@
 import hashlib
 from pathlib import Path
+from tqdm import tqdm
 
 from etl.file_lister import FileLister
 from xml.etree.ElementTree import ElementTree, parse
@@ -14,7 +15,7 @@ class Loader:
         files: list[Path] = self.file_lister.list()
 
         xmls_loaded: list[XMLLoaded] = []
-        for file in files:
+        for file in tqdm(files):
             filename: str = file.name
             tree: ElementTree = parse(source=file) # ty: ignore
             with open(file, 'rb') as f:
