@@ -24,7 +24,7 @@ def main():
         researcher: ResearcherData = xml.researcher_data
         id = researcher_service.add_researcher(researcher.full_name)
         for paper in researcher.papers:
-            paper_service.add_paper(paper.title, id)
+            paper_service.insert_paper(paper.title, id)
 
 if __name__ == "__main__":
     main()
