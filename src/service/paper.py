@@ -9,7 +9,7 @@ class PaperService:
     def remove_all_papers(self):
         return self.dao.delete_all_papers()
 
-    def insert_paper(
+    def add_paper(
         self,
         title: str,
         researcher_id: int,
@@ -25,7 +25,7 @@ class PaperService:
         first_page: str | None = None,
         last_page: str | None = None,
     ) -> int:
-        return self.dao.insert_paper(
+        return self.dao.add_paper(
             title,
             researcher_id,
             year,

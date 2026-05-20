@@ -16,7 +16,7 @@ class ResearcherDao:
 
                 return cur.rowcount
 
-    def insert_researcher(
+    def add_researcher(
         self,
         full_name: str,
         lattes_id: str,

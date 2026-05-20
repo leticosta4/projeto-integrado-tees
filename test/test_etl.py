@@ -104,7 +104,7 @@ def test_storage(app):
         researcher: ResearcherData = xml.researcher_data
         id = researcher_service.add_researcher(researcher.full_name)
         for paper in researcher.papers:
-            paper_service.insert_paper(paper.title, id)
+            paper_service.add_paper(paper.title, id)
 
     assert researcher_service.get_researcher_count() == 8
     assert paper_service.get_paper_count() == 494 

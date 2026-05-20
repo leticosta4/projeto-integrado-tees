@@ -9,7 +9,7 @@ class ResearcherService:
     def remove_all_researchers(self):
         return self.dao.delete_all_researchers()
 
-    def insert_researcher(
+    def add_researcher(
         self,
         full_name: str,
         lattes_id: str,
@@ -20,7 +20,7 @@ class ResearcherService:
         birth_state: str | None = None,
         update_date: str | None = None,
     ) -> int:
-        return self.dao.insert_researcher(
+        return self.dao.add_researcher(
             full_name,
             lattes_id,
             citation_name,

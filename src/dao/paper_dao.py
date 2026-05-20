@@ -16,7 +16,7 @@ class PaperDao:
 
                 return cur.rowcount
 
-    def insert_paper(
+    def add_paper(
         self,
         title: str,
         researcher_id: int,
