@@ -10,7 +10,7 @@ from service.paper import PaperService
 from service.research_area import ResearchAreaService
 from service.researcher import ResearcherService
 
-def test_store_researcher(
+def _store_researcher(
     researcher_service: ResearcherService,
     researcher: ResearcherData,
 ) -> int:
@@ -25,7 +25,7 @@ def test_store_researcher(
         researcher.update_date,
     )
 
-def test_store_papers(
+def _store_papers(
     paper_service: PaperService,
     researcher_id: int,
     researcher: ResearcherData,
@@ -47,7 +47,7 @@ def test_store_papers(
             paper.last_page,
         )
 
-def test_store_academic_formations(
+def _store_academic_formations(
     academic_formation_service: AcademicFormationService,
     researcher_id: int,
     researcher: ResearcherData,
@@ -67,7 +67,7 @@ def test_store_academic_formations(
             formation.had_scholarship,
         )
 
-def test_store_research_areas(
+def _store_research_areas(
     research_area_service: ResearchAreaService,
     researcher_id: int,
     researcher: ResearcherData,
@@ -81,7 +81,7 @@ def test_store_research_areas(
             area.specialty,
         )
 
-def test_store_conference_papers(
+def _store_conference_papers(
     conference_paper_service: ConferencePaperService,
     researcher_id: int,
     researcher: ResearcherData,
@@ -105,7 +105,7 @@ def test_store_conference_papers(
             conference_paper.last_page,
         )
 
-def test_store_advisings(
+def _store_advisings(
     advising_service: AdvisingService,
     researcher_id: int,
     researcher: ResearcherData,
