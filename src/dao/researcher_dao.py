@@ -16,12 +16,31 @@ class ResearcherDao:
 
                 return cur.rowcount
 
-    def insert_researcher(self, full_name: str) -> int:
+    def insert_researcher(
+        self,
+        full_name: str,
+        lattes_id: str,
+        citation_name: str | None = None,
+        orcid: str | None = None,
+        nationality: str | None = None,
+        birth_country: str | None = None,
+        birth_state: str | None = None,
+        update_date: str | None = None,
+    ) -> int:
         sql = """
         INSERT INTO researcher
-        (full_name)
+        (
+            full_name,
+            lattes_id,
+            citation_name,
+            orcid,
+            nationality,
+            birth_country,
+            birth_state,
+            update_date
+        )
         VALUES
-        (%s)
+        (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
 
@@ -29,7 +48,16 @@ class ResearcherDao:
             with conn.cursor() as cur:
                 _ = cur.execute(
                     sql,
-                    (full_name,)
+                    (
+                        full_name,
+                        lattes_id,
+                        citation_name,
+                        orcid,
+                        nationality,
+                        birth_country,
+                        birth_state,
+                        update_date,
+                    )
                 )
 
                 row = cur.fetchone()
@@ -49,7 +77,16 @@ class ResearcherDao:
 
     def select_researcher_by_full_name(self, full_name: str) -> Researcher | None:
         sql = """
-        SELECT id, full_name
+        SELECT
+            id,
+            full_name,
+            lattes_id,
+            citation_name,
+            orcid,
+            nationality,
+            birth_country,
+            birth_state,
+            update_date
         FROM researcher
         WHERE full_name = %s
         """
