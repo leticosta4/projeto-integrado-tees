@@ -1,9 +1,9 @@
 from psycopg_pool import ConnectionPool
-from settings import Settings
+from .settings import Settings
 from flask import Flask
 
-from service.paper import PaperService
-from service.researcher import ResearcherService
+from .service.paper import PaperService
+from .service.researcher import ResearcherService
 
 def create_app():
     app = Flask(__name__)
@@ -36,6 +36,6 @@ def create_app():
     
     return app
 
-if __name__ == "__main__":
-    app = create_app()
-    app.run()
+# if __name__ == "__main__":
+#     app = create_app()
+#     app.run()
