@@ -1,5 +1,15 @@
+from typing import TypedDict
 from pydantic import BaseModel
+from xml.etree.ElementTree import ElementTree
 
+# Loader model
+class XMLLoaded(TypedDict):
+    filename: str
+    filehash: str
+    data: ElementTree
+
+
+# Extractor models
 class Paper(BaseModel):
     title: str
 

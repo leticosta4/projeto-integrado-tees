@@ -1,15 +1,14 @@
 # projeto-integrado-backend
 projeto final de tópicos especiais em engneharia de software
 
+# Docs
 
 - Kanban: https://github.com/users/leticosta4/projects/11/views/1
 - Protótipo de média fidelidade com fluxo de navgabilidade: https://www.figma.com/design/fWOUafo7wJOMO4omU0G0zC/Untitled--Copy-?node-id=0-1&p=f&t=BU6lvoRRA1Ez1BJ2-0
 - [Novo] Projeto Arquitetural (com o novo DER): https://github.com/leticosta4/projeto-integrado-tees/wiki/Projeto-Arquitetural
 - Outros docs disponíveis na [pasta de documentos](./docs/)
 
-# Rodando
-
-# Desenvolvendo
+# Setup do projeto
 
 - Adicionar `.env` baseado no `env.example`
 
@@ -25,7 +24,9 @@ projeto final de tópicos especiais em engneharia de software
 
 - Instalando o projeto: `uv pip install -e .`
 
-- Rodando: `uv run src/main.py`
+- Rodando: `uv run main.py`
+
+# Sobre as migrations
 
 - Criando migrações (se necessário): `uv run yoyo new --sql migrations`
 
