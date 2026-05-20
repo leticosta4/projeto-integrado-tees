@@ -24,7 +24,11 @@ projeto final de tópicos especiais em engneharia de software
 
 - Instalando o projeto: `uv pip install -e .`
 
-- Rodando: `uv run src/app.py`
+# Rodando:
+
+- ETL: `uv run src/ingest.py`
+
+- Servidor Flask: `uv run src/app.py`
 
 # Sobre as migrations
 

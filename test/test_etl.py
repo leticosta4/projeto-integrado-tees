@@ -8,6 +8,8 @@ from etl.extractor import Extractor
 from etl.loader import Loader
 from etl.models import XMLData, ResearcherData, XMLLoaded, Paper
 
+from tqdm import tqdm
+
 def test_file_lister():
     file_lister: FileLister = FileLister()
 
@@ -67,7 +69,8 @@ def test_storage(app):
     paper_service: PaperService = app.config['PAPER_SERVICE']
     assert paper_service.get_paper_count() == 0
 
-    for xml in data:
+    print('[INFO] Storing...')
+    for xml in tqdm(data):
         researcher: ResearcherData = xml.researcher_data
         id = researcher_service.add_researcher(researcher.full_name)
         for paper in researcher.papers:
