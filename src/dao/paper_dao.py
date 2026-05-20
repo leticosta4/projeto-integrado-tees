@@ -1,6 +1,6 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
-from domain.paper.models import Paper
+from models.paper import Paper
 
 class PaperDao:
     def __init__(self, pool: ConnectionPool) -> None:

@@ -2,8 +2,8 @@ from flask import Flask
 from app import create_app
 from settings import Settings
 import pytest
-from domain.researcher.researcher_service import ResearcherService
-from domain.paper.paper_service import PaperService
+from domain.service.researcher_service import ResearcherService
+from domain.service.paper_service import PaperService
 from psycopg_pool import ConnectionPool
 
 @pytest.fixture()
