@@ -24,7 +24,7 @@ projeto final de tópicos especiais em engneharia de software
 
 - Instalando o projeto: `uv pip install -e .`
 
-- Rodando: `uv run src/app.py`
+- Rodando: `uv run main.py`
 
 # Sobre as migrations
 
