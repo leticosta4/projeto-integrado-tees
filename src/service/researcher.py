@@ -9,7 +9,7 @@ class ResearcherService:
     def remove_all_researchers(self):
         return self.dao.delete_all_researchers()
 
-    def insert_researcher(self, full_name: str) -> int:
+    def add_researcher(self, full_name: str) -> int:
         return self.dao.insert_researcher(full_name)
 
     def get_researcher_count(self) -> int:

@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from xml.etree.ElementTree import Element
 
 from etl.loader import Loader
@@ -35,11 +36,13 @@ class Extractor:
         return paper_titles
 
     def extract(self) -> list[XMLData]:
+        print("[INFO] Loading...")
         xmls_loaded: list[XMLLoaded] = self.loader.load()
 
         results: list[XMLData] = []
 
-        for xml_loaded in xmls_loaded:
+        print("[INFO] Extracting...")
+        for xml_loaded in tqdm(xmls_loaded):
             root: Element[str] | None  = xml_loaded['data'].getroot()
 
             if root is not None:
