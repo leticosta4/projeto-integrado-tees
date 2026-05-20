@@ -22,9 +22,32 @@ def main():
     print('[INFO] Storing...')
     for xml in tqdm(data):
         researcher: ResearcherData = xml.researcher_data
-        id = researcher_service.add_researcher(researcher.full_name)
+        id = researcher_service.add_researcher(
+            researcher.full_name,
+            researcher.lattes_id,
+            researcher.citation_name,
+            researcher.orcid,
+            researcher.nationality,
+            researcher.birth_country,
+            researcher.birth_state,
+            researcher.update_date,
+        )
         for paper in researcher.papers:
-            paper_service.add_paper(paper.title, id)
+            paper_service.add_paper(
+                paper.title,
+                id,
+                paper.year,
+                paper.doi,
+                paper.language,
+                paper.nature,
+                paper.country,
+                paper.journal,
+                paper.issn,
+                paper.volume,
+                paper.issue,
+                paper.first_page,
+                paper.last_page,
+            )
 
 if __name__ == "__main__":
     main()

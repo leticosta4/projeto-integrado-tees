@@ -41,6 +41,38 @@ class PaperService:
             last_page,
         )
 
+    def insert_paper(
+        self,
+        title: str,
+        researcher_id: int,
+        year: int | None = None,
+        doi: str | None = None,
+        language: str | None = None,
+        nature: str | None = None,
+        country: str | None = None,
+        journal: str | None = None,
+        issn: str | None = None,
+        volume: str | None = None,
+        issue: str | None = None,
+        first_page: str | None = None,
+        last_page: str | None = None,
+    ) -> int:
+        return self.add_paper(
+            title,
+            researcher_id,
+            year,
+            doi,
+            language,
+            nature,
+            country,
+            journal,
+            issn,
+            volume,
+            issue,
+            first_page,
+            last_page,
+        )
+
     def get_paper_count(self) -> int:
         return self.dao.select_paper_count()
 

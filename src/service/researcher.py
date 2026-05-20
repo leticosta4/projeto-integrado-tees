@@ -31,6 +31,28 @@ class ResearcherService:
             update_date,
         )
 
+    def insert_researcher(
+        self,
+        full_name: str,
+        lattes_id: str,
+        citation_name: str | None = None,
+        orcid: str | None = None,
+        nationality: str | None = None,
+        birth_country: str | None = None,
+        birth_state: str | None = None,
+        update_date: str | None = None,
+    ) -> int:
+        return self.add_researcher(
+            full_name,
+            lattes_id,
+            citation_name,
+            orcid,
+            nationality,
+            birth_country,
+            birth_state,
+            update_date,
+        )
+
     def get_researcher_count(self) -> int:
         return self.dao.select_researcher_count()
 
