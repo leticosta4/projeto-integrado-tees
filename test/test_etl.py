@@ -1,11 +1,9 @@
 from pathlib import Path
 
-from src.etl.file_lister import FileLister
-from src.etl.extractor import Extractor
-from src.etl.loader import Loader
-from src.etl.models import XMLData, ResearcherData, XMLLoaded
-
-
+from etl.file_lister import FileLister
+from etl.extractor import Extractor
+from etl.loader import Loader
+from etl.models import XMLData, ResearcherData, XMLLoaded
 
 def test_file_lister():
     file_lister: FileLister = FileLister()
@@ -36,10 +34,6 @@ def test_extractor():
         for researcher in researchers_data
         for paper in researcher.papers
     )
-
-
-def test_loader():
-    pass
 
 
 def test_loader():
