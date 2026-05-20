@@ -9,7 +9,7 @@ class PaperService:
     def remove_all_papers(self):
         return self.dao.delete_all_papers()
 
-    def insert_paper(self, title: str, researcher_id: int) -> int:
+    def add_paper(self, title: str, researcher_id: int) -> int:
         return self.dao.insert_paper(title, researcher_id)
 
     def get_paper_count(self) -> int:

@@ -19,7 +19,7 @@ class PaperDao:
     def insert_paper(self, title: str, researcher_id: int) -> int:
         sql = """
         INSERT INTO papers
-        (title, researcher)
+        (title, researcher_id)
         VALUES
         (%s, %s)
         RETURNING id
