@@ -35,6 +35,36 @@ def test_extractor():
         for paper in researcher.papers
     )
 
+    researcher = next(
+        d.researcher_data
+        for d in results
+        if d.filename == '1608472474770322.xml'
+    )
+    assert researcher.lattes_id == '1608472474770322'
+    assert researcher.update_date == '23032026'
+    assert researcher.birth_country == 'Brasil'
+    assert researcher.birth_state == 'BA'
+    assert researcher.orcid == 'https://orcid.org/0000-0002-7752-8319'
+    assert researcher.citation_name is not None
+
+    paper = next(
+        paper
+        for paper in researcher.papers
+        if paper.title == (
+            'R/S analysis of pluviometric records: '
+            'comparison with numerical experiments'
+        )
+    )
+    assert paper.year == 2001
+    assert paper.language == 'Inglês'
+    assert paper.nature == 'COMPLETO'
+    assert paper.country == 'Brasil'
+    assert paper.journal == 'Physica. A'
+    assert paper.issn == '03784371'
+    assert paper.volume == '295'
+    assert paper.first_page == '38'
+    assert paper.last_page == '41'
+
 
 def test_loader():
     loader: Loader = Loader()
