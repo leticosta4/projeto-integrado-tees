@@ -1,7 +1,7 @@
-from ingest.loader.loader import Loader
-from xml.etree.ElementTree import ElementTree, Element
-from ingest.extractor.models import XMLData, ResearcherData, Paper
-from ingest.loader.models import XMLLoaded
+from xml.etree.ElementTree import Element
+
+from etl.loader import Loader
+from etl.models import XMLData, ResearcherData, Paper, XMLLoaded
 
 class Extractor:
     def __init__(self):
