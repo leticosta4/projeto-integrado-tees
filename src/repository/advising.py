@@ -1,19 +1,21 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
-from dao.advising_dao import AdvisingDao
 from models.advising import Advising
 
 
 class AdvisingRepository:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: AdvisingDao = AdvisingDao(pool)
+        self.pool: ConnectionPool = pool
 
     def remove_all(self) -> int:
         sql = """
         DELETE FROM advising
         """
-        return self.dao.execute(sql)
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql)
+                return cur.rowcount
 
     def add(
         self,
@@ -48,30 +50,37 @@ class AdvisingRepository:
         (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
-        return self.dao.insert_and_return_id(
-            sql,
-            (
-                researcher_id,
-                level,
-                title,
-                year,
-                advisee_name,
-                advising_type,
-                institution,
-                course,
-                country,
-                had_scholarship,
-                funding_agency,
-            ),
-        )
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(
+                    sql,
+                    (
+                        researcher_id,
+                        level,
+                        title,
+                        year,
+                        advisee_name,
+                        advising_type,
+                        institution,
+                        course,
+                        country,
+                        had_scholarship,
+                        funding_agency,
+                    ),
+                )
+                row = cur.fetchone()
+                return row[0] if row else 0
 
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
         FROM advising
         """
-        count = self.dao.fetch_value(sql)
-        return count if count is not None else 0
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql)
+                row = cur.fetchone()
+                return row[0] if row else 0
 
     def get_by_researcher_id(self, researcher_id: int) -> list[Advising]:
         sql = """
@@ -91,8 +100,7 @@ class AdvisingRepository:
         FROM advising
         WHERE researcher_id = %s
         """
-        return self.dao.fetch_all(
-            sql,
-            (researcher_id,),
-            row_factory=class_row(Advising),
-        )
+        with self.pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(Advising)) as cur:
+                _ = cur.execute(sql, (researcher_id,))
+                return cur.fetchall()

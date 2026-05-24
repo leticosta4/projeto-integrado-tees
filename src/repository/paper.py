@@ -1,19 +1,21 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
-from dao.paper_dao import PaperDao
 from models.paper import Paper
 
 
 class PaperRepository:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: PaperDao = PaperDao(pool)
+        self.pool: ConnectionPool = pool
 
     def remove_all(self) -> int:
         sql = """
         DELETE FROM papers
         """
-        return self.dao.execute(sql)
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql)
+                return cur.rowcount
 
     def add(
         self,
@@ -52,32 +54,39 @@ class PaperRepository:
         (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
-        return self.dao.insert_and_return_id(
-            sql,
-            (
-                title,
-                researcher_id,
-                year,
-                doi,
-                language,
-                nature,
-                country,
-                journal,
-                issn,
-                volume,
-                issue,
-                first_page,
-                last_page,
-            ),
-        )
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(
+                    sql,
+                    (
+                        title,
+                        researcher_id,
+                        year,
+                        doi,
+                        language,
+                        nature,
+                        country,
+                        journal,
+                        issn,
+                        volume,
+                        issue,
+                        first_page,
+                        last_page,
+                    ),
+                )
+                row = cur.fetchone()
+                return row[0] if row else 0
 
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
         FROM papers
         """
-        count = self.dao.fetch_value(sql)
-        return count if count is not None else 0
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql)
+                row = cur.fetchone()
+                return row[0] if row else 0
 
     def get_by_title(self, title: str) -> Paper | None:
         sql = """
@@ -99,4 +108,7 @@ class PaperRepository:
         FROM papers
         WHERE title = %s
         """
-        return self.dao.fetch_one(sql, (title,), row_factory=class_row(Paper))
+        with self.pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(Paper)) as cur:
+                _ = cur.execute(sql, (title,))
+                return cur.fetchone()

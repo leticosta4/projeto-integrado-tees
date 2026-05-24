@@ -1,19 +1,21 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
-from dao.research_area_dao import ResearchAreaDao
 from models.research_area import ResearchArea
 
 
 class ResearchAreaRepository:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: ResearchAreaDao = ResearchAreaDao(pool)
+        self.pool: ConnectionPool = pool
 
     def remove_all(self) -> int:
         sql = """
         DELETE FROM research_area
         """
-        return self.dao.execute(sql)
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql)
+                return cur.rowcount
 
     def add(
         self,
@@ -36,24 +38,31 @@ class ResearchAreaRepository:
         (%s, %s, %s, %s, %s)
         RETURNING id
         """
-        return self.dao.insert_and_return_id(
-            sql,
-            (
-                researcher_id,
-                major_area,
-                area,
-                sub_area,
-                specialty,
-            ),
-        )
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(
+                    sql,
+                    (
+                        researcher_id,
+                        major_area,
+                        area,
+                        sub_area,
+                        specialty,
+                    ),
+                )
+                row = cur.fetchone()
+                return row[0] if row else 0
 
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
         FROM research_area
         """
-        count = self.dao.fetch_value(sql)
-        return count if count is not None else 0
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql)
+                row = cur.fetchone()
+                return row[0] if row else 0
 
     def get_by_researcher_id(self, researcher_id: int) -> list[ResearchArea]:
         sql = """
@@ -67,8 +76,7 @@ class ResearchAreaRepository:
         FROM research_area
         WHERE researcher_id = %s
         """
-        return self.dao.fetch_all(
-            sql,
-            (researcher_id,),
-            row_factory=class_row(ResearchArea),
-        )
+        with self.pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(ResearchArea)) as cur:
+                _ = cur.execute(sql, (researcher_id,))
+                return cur.fetchall()
