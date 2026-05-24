@@ -1,12 +1,14 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
+
 from models.advising import Advising
 
-class AdvisingDao:
+
+class AdvisingRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
 
-    def delete_all_advisings(self) -> int:
+    def remove_all(self) -> int:
         sql = """
         DELETE FROM advising
         """
@@ -15,7 +17,7 @@ class AdvisingDao:
                 _ = cur.execute(sql)
                 return cur.rowcount
 
-    def add_advising(
+    def add(
         self,
         researcher_id: int,
         level: str,
@@ -48,7 +50,6 @@ class AdvisingDao:
         (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
-
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(
@@ -70,7 +71,7 @@ class AdvisingDao:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_advising_count(self) -> int:
+    def count(self) -> int:
         sql = """
         SELECT COUNT(*)
         FROM advising
@@ -81,7 +82,7 @@ class AdvisingDao:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_advisings_by_researcher_id(self, researcher_id: int) -> list[Advising]:
+    def get_by_researcher_id(self, researcher_id: int) -> list[Advising]:
         sql = """
         SELECT
             id,

@@ -1,12 +1,14 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
+
 from models.academic_formation import AcademicFormation
 
-class AcademicFormationDao:
+
+class AcademicFormationRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
 
-    def delete_all_academic_formations(self) -> int:
+    def remove_all(self) -> int:
         sql = """
         DELETE FROM academic_formation
         """
@@ -15,7 +17,7 @@ class AcademicFormationDao:
                 _ = cur.execute(sql)
                 return cur.rowcount
 
-    def add_academic_formation(
+    def add(
         self,
         researcher_id: int,
         level: str,
@@ -48,7 +50,6 @@ class AcademicFormationDao:
         (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
-
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(
@@ -70,7 +71,7 @@ class AcademicFormationDao:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_academic_formation_count(self) -> int:
+    def count(self) -> int:
         sql = """
         SELECT COUNT(*)
         FROM academic_formation
@@ -81,9 +82,7 @@ class AcademicFormationDao:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_academic_formations_by_researcher_id(
-        self, researcher_id: int
-    ) -> list[AcademicFormation]:
+    def get_by_researcher_id(self, researcher_id: int) -> list[AcademicFormation]:
         sql = """
         SELECT
             id,

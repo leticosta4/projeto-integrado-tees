@@ -1,22 +1,23 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
+
 from models.researcher import Researcher
 
-class ResearcherDao:
+
+class ResearcherRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
 
-    def delete_all_researchers(self) -> int:
+    def remove_all(self) -> int:
         sql = """
         DELETE FROM researcher
         """
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
-
                 return cur.rowcount
 
-    def add_researcher(
+    def add(
         self,
         full_name: str,
         lattes_id: str,
@@ -43,7 +44,6 @@ class ResearcherDao:
         (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
-
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(
@@ -57,25 +57,23 @@ class ResearcherDao:
                         birth_country,
                         birth_state,
                         update_date,
-                    )
+                    ),
                 )
-
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_researcher_count(self) -> int:
+    def count(self) -> int:
         sql = """
         SELECT COUNT(*)
         FROM researcher
         """
-
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_researcher_by_full_name(self, full_name: str) -> Researcher | None:
+    def get_by_full_name(self, full_name: str) -> Researcher | None:
         sql = """
         SELECT
             id,

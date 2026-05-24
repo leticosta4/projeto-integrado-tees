@@ -1,12 +1,14 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
+
 from models.research_area import ResearchArea
 
-class ResearchAreaDao:
+
+class ResearchAreaRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
 
-    def delete_all_research_areas(self) -> int:
+    def remove_all(self) -> int:
         sql = """
         DELETE FROM research_area
         """
@@ -15,7 +17,7 @@ class ResearchAreaDao:
                 _ = cur.execute(sql)
                 return cur.rowcount
 
-    def add_research_area(
+    def add(
         self,
         researcher_id: int,
         major_area: str | None = None,
@@ -36,7 +38,6 @@ class ResearchAreaDao:
         (%s, %s, %s, %s, %s)
         RETURNING id
         """
-
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(
@@ -52,7 +53,7 @@ class ResearchAreaDao:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_research_area_count(self) -> int:
+    def count(self) -> int:
         sql = """
         SELECT COUNT(*)
         FROM research_area
@@ -63,9 +64,7 @@ class ResearchAreaDao:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_research_areas_by_researcher_id(
-        self, researcher_id: int
-    ) -> list[ResearchArea]:
+    def get_by_researcher_id(self, researcher_id: int) -> list[ResearchArea]:
         sql = """
         SELECT
             id,

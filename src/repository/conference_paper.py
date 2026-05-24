@@ -1,116 +1,122 @@
 from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
-from models.paper import Paper
 
-class PaperDao:
+from models.conference_paper import ConferencePaper
+
+
+class ConferencePaperRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
 
-    def delete_all_papers(self) -> int:
+    def remove_all(self) -> int:
         sql = """
-        DELETE FROM papers
+        DELETE FROM conference_paper
         """
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
-
                 return cur.rowcount
 
-    def add_paper(
+    def add(
         self,
-        title: str,
         researcher_id: int,
+        title: str,
         year: int | None = None,
-        doi: str | None = None,
-        language: str | None = None,
         nature: str | None = None,
         country: str | None = None,
-        journal: str | None = None,
-        issn: str | None = None,
-        volume: str | None = None,
-        issue: str | None = None,
+        language: str | None = None,
+        doi: str | None = None,
+        event_name: str | None = None,
+        event_city: str | None = None,
+        event_year: int | None = None,
+        event_classification: str | None = None,
+        proceedings_title: str | None = None,
+        isbn: str | None = None,
         first_page: str | None = None,
         last_page: str | None = None,
     ) -> int:
         sql = """
-        INSERT INTO papers
+        INSERT INTO conference_paper
         (
-            title,
             researcher_id,
+            title,
             year,
-            doi,
-            language,
             nature,
             country,
-            journal,
-            issn,
-            volume,
-            issue,
+            language,
+            doi,
+            event_name,
+            event_city,
+            event_year,
+            event_classification,
+            proceedings_title,
+            isbn,
             first_page,
             last_page
         )
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
-
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(
                     sql,
                     (
-                        title,
                         researcher_id,
+                        title,
                         year,
-                        doi,
-                        language,
                         nature,
                         country,
-                        journal,
-                        issn,
-                        volume,
-                        issue,
+                        language,
+                        doi,
+                        event_name,
+                        event_city,
+                        event_year,
+                        event_classification,
+                        proceedings_title,
+                        isbn,
                         first_page,
                         last_page,
-                    )
+                    ),
                 )
-
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_paper_count(self) -> int:
+    def count(self) -> int:
         sql = """
         SELECT COUNT(*)
-        FROM papers
+        FROM conference_paper
         """
-
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
 
-    def select_paper_by_title(self, title: str) -> Paper | None:
+    def get_by_researcher_id(self, researcher_id: int) -> list[ConferencePaper]:
         sql = """
         SELECT
             id,
-            title,
             researcher_id,
+            title,
             year,
-            doi,
-            language,
             nature,
             country,
-            journal,
-            issn,
-            volume,
-            issue,
+            language,
+            doi,
+            event_name,
+            event_city,
+            event_year,
+            event_classification,
+            proceedings_title,
+            isbn,
             first_page,
             last_page
-        FROM papers
-        WHERE title = %s
+        FROM conference_paper
+        WHERE researcher_id = %s
         """
         with self.pool.connection() as conn:
-            with conn.cursor(row_factory=class_row(Paper)) as cur:
-                _ = cur.execute(sql, (title,))
-                return cur.fetchone()
+            with conn.cursor(row_factory=class_row(ConferencePaper)) as cur:
+                _ = cur.execute(sql, (researcher_id,))
+                return cur.fetchall()

@@ -1,13 +1,14 @@
-from dao.conference_paper_dao import ConferencePaperDao
-from models.conference_paper import ConferencePaper
 from psycopg_pool import ConnectionPool
+
+from models.conference_paper import ConferencePaper
+from repository.conference_paper import ConferencePaperRepository
 
 class ConferencePaperService:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: ConferencePaperDao = ConferencePaperDao(pool)
+        self.repository: ConferencePaperRepository = ConferencePaperRepository(pool)
 
     def remove_all_conference_papers(self):
-        return self.dao.delete_all_conference_papers()
+        return self.repository.remove_all()
 
     def add_conference_paper(
         self,
@@ -27,7 +28,7 @@ class ConferencePaperService:
         first_page: str | None = None,
         last_page: str | None = None,
     ) -> int:
-        return self.dao.add_conference_paper(
+        return self.repository.add(
             researcher_id,
             title,
             year,
@@ -46,9 +47,9 @@ class ConferencePaperService:
         )
 
     def get_conference_paper_count(self) -> int:
-        return self.dao.select_conference_paper_count()
+        return self.repository.count()
 
     def get_conference_papers_by_researcher_id(
         self, researcher_id: int
     ) -> list[ConferencePaper]:
-        return self.dao.select_conference_papers_by_researcher_id(researcher_id)
+        return self.repository.get_by_researcher_id(researcher_id)

@@ -1,13 +1,14 @@
-from dao.advising_dao import AdvisingDao
-from models.advising import Advising
 from psycopg_pool import ConnectionPool
+
+from models.advising import Advising
+from repository.advising import AdvisingRepository
 
 class AdvisingService:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: AdvisingDao = AdvisingDao(pool)
+        self.repository: AdvisingRepository = AdvisingRepository(pool)
 
     def remove_all_advisings(self):
-        return self.dao.delete_all_advisings()
+        return self.repository.remove_all()
 
     def add_advising(
         self,
@@ -23,7 +24,7 @@ class AdvisingService:
         had_scholarship: bool | None = None,
         funding_agency: str | None = None,
     ) -> int:
-        return self.dao.add_advising(
+        return self.repository.add(
             researcher_id,
             level,
             title,
@@ -38,7 +39,7 @@ class AdvisingService:
         )
 
     def get_advising_count(self) -> int:
-        return self.dao.select_advising_count()
+        return self.repository.count()
 
     def get_advisings_by_researcher_id(self, researcher_id: int) -> list[Advising]:
-        return self.dao.select_advisings_by_researcher_id(researcher_id)
+        return self.repository.get_by_researcher_id(researcher_id)
