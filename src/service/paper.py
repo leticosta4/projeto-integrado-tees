@@ -1,13 +1,14 @@
-from models.paper import Paper
-from dao.paper_dao import PaperDao
 from psycopg_pool import ConnectionPool
+
+from models.paper import Paper
+from repository.paper import PaperRepository
 
 class PaperService:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: PaperDao = PaperDao(pool)
+        self.repository: PaperRepository = PaperRepository(pool)
 
     def remove_all_papers(self):
-        return self.dao.delete_all_papers()
+        return self.repository.remove_all()
 
     def add_paper(
         self,
@@ -25,7 +26,7 @@ class PaperService:
         first_page: str | None = None,
         last_page: str | None = None,
     ) -> int:
-        return self.dao.add_paper(
+        return self.repository.add(
             title,
             researcher_id,
             year,
@@ -74,7 +75,7 @@ class PaperService:
         )
 
     def get_paper_count(self) -> int:
-        return self.dao.select_paper_count()
+        return self.repository.count()
 
     def get_paper_by_title(self, title: str) -> Paper | None:
-        return self.dao.select_paper_by_title(title)
+        return self.repository.get_by_title(title)

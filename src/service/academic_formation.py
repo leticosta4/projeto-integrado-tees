@@ -1,13 +1,14 @@
-from dao.academic_formation_dao import AcademicFormationDao
-from models.academic_formation import AcademicFormation
 from psycopg_pool import ConnectionPool
+
+from models.academic_formation import AcademicFormation
+from repository.academic_formation import AcademicFormationRepository
 
 class AcademicFormationService:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: AcademicFormationDao = AcademicFormationDao(pool)
+        self.repository: AcademicFormationRepository = AcademicFormationRepository(pool)
 
     def remove_all_academic_formations(self):
-        return self.dao.delete_all_academic_formations()
+        return self.repository.remove_all()
 
     def add_academic_formation(
         self,
@@ -23,7 +24,7 @@ class AcademicFormationService:
         funding_agency: str | None = None,
         had_scholarship: bool | None = None,
     ) -> int:
-        return self.dao.add_academic_formation(
+        return self.repository.add(
             researcher_id,
             level,
             institution,
@@ -38,9 +39,9 @@ class AcademicFormationService:
         )
 
     def get_academic_formation_count(self) -> int:
-        return self.dao.select_academic_formation_count()
+        return self.repository.count()
 
     def get_academic_formations_by_researcher_id(
         self, researcher_id: int
     ) -> list[AcademicFormation]:
-        return self.dao.select_academic_formations_by_researcher_id(researcher_id)
+        return self.repository.get_by_researcher_id(researcher_id)

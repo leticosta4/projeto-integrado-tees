@@ -1,13 +1,14 @@
-from dao.research_area_dao import ResearchAreaDao
-from models.research_area import ResearchArea
 from psycopg_pool import ConnectionPool
+
+from models.research_area import ResearchArea
+from repository.research_area import ResearchAreaRepository
 
 class ResearchAreaService:
     def __init__(self, pool: ConnectionPool) -> None:
-        self.dao: ResearchAreaDao = ResearchAreaDao(pool)
+        self.repository: ResearchAreaRepository = ResearchAreaRepository(pool)
 
     def remove_all_research_areas(self):
-        return self.dao.delete_all_research_areas()
+        return self.repository.remove_all()
 
     def add_research_area(
         self,
@@ -17,7 +18,7 @@ class ResearchAreaService:
         sub_area: str | None = None,
         specialty: str | None = None,
     ) -> int:
-        return self.dao.add_research_area(
+        return self.repository.add(
             researcher_id,
             major_area,
             area,
@@ -26,9 +27,9 @@ class ResearchAreaService:
         )
 
     def get_research_area_count(self) -> int:
-        return self.dao.select_research_area_count()
+        return self.repository.count()
 
     def get_research_areas_by_researcher_id(
         self, researcher_id: int
     ) -> list[ResearchArea]:
-        return self.dao.select_research_areas_by_researcher_id(researcher_id)
+        return self.repository.get_by_researcher_id(researcher_id)
