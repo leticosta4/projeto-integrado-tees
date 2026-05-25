@@ -5,6 +5,9 @@ x-test-variables: &test
     POSTGRES_DB: postgres
     PG_HOST: tees-test-pgvector
     PG_PORT: 5432
+    GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+    EMBEDDING_MODEL: ${EMBEDDING_MODEL}
+    DIMENSIONS: ${DIMENSIONS}
   networks:
     - tees-network
 
@@ -15,6 +18,9 @@ x-dev-variables: &dev
     POSTGRES_DB: ${POSTGRES_DB:-postgres}
     PG_HOST: ${PG_HOST:-localhost}
     PG_PORT: ${PG_PORT:-5432}
+    GOOGLE_API_KEY: ${GOOGLE_API_KEY:-any}
+    EMBEDDING_MODEL: ${EMBEDDING_MODEL:-any}
+    DIMENSIONS: ${DIMENSIONS:-128}
 
 services:
   tees-test:
