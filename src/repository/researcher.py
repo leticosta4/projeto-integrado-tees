@@ -20,6 +20,8 @@ class ResearcherRepository:
     def add(
         self,
         full_name: str,
+        filename: str,
+        filehash: str,
         lattes_id: str,
         citation_name: str | None = None,
         orcid: str | None = None,
@@ -32,6 +34,8 @@ class ResearcherRepository:
         INSERT INTO researcher
         (
             full_name,
+            filename,
+            filehash,
             lattes_id,
             citation_name,
             orcid,
@@ -41,7 +45,7 @@ class ResearcherRepository:
             update_date
         )
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
         with self.pool.connection() as conn:
@@ -50,6 +54,8 @@ class ResearcherRepository:
                     sql,
                     (
                         full_name,
+                        filename,
+                        filehash,
                         lattes_id,
                         citation_name,
                         orcid,
@@ -92,3 +98,15 @@ class ResearcherRepository:
             with conn.cursor(row_factory=class_row(Researcher)) as cur:
                 _ = cur.execute(sql, (full_name,))
                 return cur.fetchone()
+
+    def select_filehash_exists(self, filehash: str) -> str | None:
+        sql = """
+        SELECT filehash
+        FROM researcher
+        WHERE filehash = %s
+        """
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql, (filehash,))
+                row = cur.fetchone()
+                return row[0] if row else None

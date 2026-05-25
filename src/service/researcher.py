@@ -1,6 +1,7 @@
 from psycopg_pool import ConnectionPool
 from models.researcher import Researcher
 from repository.researcher import ResearcherRepository
+from etl.models import XMLData, ResearcherData
 
 class ResearcherService:
     def __init__(self, pool: ConnectionPool) -> None:
@@ -11,46 +12,20 @@ class ResearcherService:
 
     def add_researcher(
         self,
-        full_name: str,
-        lattes_id: str,
-        citation_name: str | None = None,
-        orcid: str | None = None,
-        nationality: str | None = None,
-        birth_country: str | None = None,
-        birth_state: str | None = None,
-        update_date: str | None = None,
+        xml_data: XMLData
     ) -> int:
+        researcher_data = xml_data.researcher_data
         return self.repository.add(
-            full_name,
-            lattes_id,
-            citation_name,
-            orcid,
-            nationality,
-            birth_country,
-            birth_state,
-            update_date,
-        )
-
-    def insert_researcher(
-        self,
-        full_name: str,
-        lattes_id: str,
-        citation_name: str | None = None,
-        orcid: str | None = None,
-        nationality: str | None = None,
-        birth_country: str | None = None,
-        birth_state: str | None = None,
-        update_date: str | None = None,
-    ) -> int:
-        return self.add_researcher(
-            full_name,
-            lattes_id,
-            citation_name,
-            orcid,
-            nationality,
-            birth_country,
-            birth_state,
-            update_date,
+            researcher_data.full_name,
+            xml_data.filename,
+            xml_data.filehash,
+            researcher_data.lattes_id,
+            researcher_data.citation_name,
+            researcher_data.orcid,
+            researcher_data.nationality,
+            researcher_data.birth_country,
+            researcher_data.birth_state,
+            researcher_data.update_date,
         )
 
     def get_researcher_count(self) -> int:
@@ -58,3 +33,6 @@ class ResearcherService:
 
     def get_researcher_by_name(self, full_name: str) -> Researcher | None:
         return self.repository.get_by_full_name(full_name)
+
+    def get_researcher_filehash(self, filehash: str) -> str | None:
+        return self.repository.select_filehash_exists(filehash)

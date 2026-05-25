@@ -39,9 +39,8 @@ def test_storage(app: Flask):
     assert conference_paper_service.get_conference_paper_count() == 325
     assert advising_service.get_advising_count() == 406
 
-    # Dedup
+    # Dedup test
 
-    """
     storage.store(data)
 
     assert researcher_service.get_researcher_count() == 8
@@ -50,4 +49,3 @@ def test_storage(app: Flask):
     assert research_area_service.get_research_area_count() == 36
     assert conference_paper_service.get_conference_paper_count() == 325
     assert advising_service.get_advising_count() == 406
-    """

@@ -23,17 +23,10 @@ class Storage:
 
     def _store_researcher(
         self,
-        researcher: ResearcherData,
+        xml_data: XMLData
     ) -> int:
         return self.researcher_service.add_researcher(
-            researcher.full_name,
-            researcher.lattes_id,
-            researcher.citation_name,
-            researcher.orcid,
-            researcher.nationality,
-            researcher.birth_country,
-            researcher.birth_state,
-            researcher.update_date,
+            xml_data
         )
 
     def _store_papers(
@@ -139,8 +132,12 @@ class Storage:
     def store(self, xml_data: list[XMLData]):
         print('[INFO] Storing...')
         for xml in tqdm(xml_data):
+            # INFO: Check duplicates
+            if self.researcher_service.get_researcher_filehash(xml.filehash) is not None:
+                continue
+
             researcher = xml.researcher_data
-            researcher_id = self._store_researcher(researcher)
+            researcher_id = self._store_researcher(xml)
             self._store_papers(researcher_id, researcher)
             self._store_academic_formations(
                 researcher_id,
