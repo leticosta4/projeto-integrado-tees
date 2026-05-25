@@ -3,7 +3,9 @@
 
 CREATE TABLE researcher (
 	id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-	full_name TEXT NOT NULL
+	full_name TEXT NOT NULL,
+	filename TEXT NOT NULL,
+	filehash TEXT NOT NULL
 );
 
 CREATE TABLE papers (

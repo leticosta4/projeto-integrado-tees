@@ -35,4 +35,7 @@ docker compose run --rm tees-test-migrations
 echo "[INFO] Running tests..."
 docker compose run --rm tees-test
 
+echo "[INFO] Clearing environment..."
+docker compose down -v --remove-orphans
+
 echo "[INFO] Service OK"
