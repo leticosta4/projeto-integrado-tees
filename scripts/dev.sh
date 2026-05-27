@@ -7,7 +7,7 @@ cleanup() {
 	local exit_code=$?
 	if [[ $exit_code -ne 0 ]]; then
 		echo "[ERROR] $exit_code, bringing down services..."
-		docker compose down --remove-orphans
+		docker compose down -v --remove-orphans
 	fi
 	exit "$exit_code"
 }
@@ -18,7 +18,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 echo "[INFO] Clearing environment (orphans only)"
-docker compose down --remove-orphans
+docker compose down -v --remove-orphans
 
 echo "[INFO] Building images..."
 docker compose build

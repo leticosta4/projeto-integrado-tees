@@ -32,7 +32,7 @@ projeto final de tópicos especiais em engneharia de software
 
 # Sobre as migrations
 
-- Criando migrações (se necessário): `uv run yoyo new --sql migrations`
+- Criando migrações (se necessário): `uv run yoyo new --sql migrations -m "mensagem"`
 
 - Rodando migrações: `uv run src/migrate.py`
 
