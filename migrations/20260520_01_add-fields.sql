@@ -1,5 +1,5 @@
 -- 
--- depends: 20260517_01_s3Zna
+-- depends: 20260517_01_baseline
 
 ALTER TABLE researcher ADD COLUMN lattes_id TEXT NOT NULL;
 ALTER TABLE researcher ADD COLUMN citation_name TEXT;

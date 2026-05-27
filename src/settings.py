@@ -1,4 +1,4 @@
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -8,6 +8,10 @@ class Settings(BaseSettings):
 
     PG_HOST: str = Field(...)
     PG_PORT: str = Field(...)
+
+    GOOGLE_API_KEY: SecretStr = Field(...)
+    EMBEDDING_MODEL: str = Field(...)
+    DIMENSIONS: int = Field(...)
 
     def MIGRATION_URL(self) -> str:
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.PG_HOST}:{self.PG_PORT}/{self.POSTGRES_DB}"
