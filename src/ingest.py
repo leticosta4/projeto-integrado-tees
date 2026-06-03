@@ -12,10 +12,12 @@ from service.paper import PaperService
 from etl.extractor import Extractor
 from etl.models import XMLData, ResearcherData
 from etl.storage import Storage
+from etl.transformer import Transformer
 
 
 def main():
-    data: list[XMLData] = Extractor().extract()
+    # Extract, Transform, Load (ETL), fiz mudança aqui
+    data: list[XMLData] = Transformer().transform(Extractor().extract())
 
     app: Flask = create_app()
     storage: Storage = Storage(app)
