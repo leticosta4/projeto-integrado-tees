@@ -25,6 +25,7 @@ class PaperService:
         issue: str | None = None,
         first_page: str | None = None,
         last_page: str | None = None,
+        title_embeddings: list[float] | None = None,
     ) -> int:
         return self.repository.add(
             title,
@@ -40,6 +41,7 @@ class PaperService:
             issue,
             first_page,
             last_page,
+            title_embeddings,
         )
 
     def insert_paper(
@@ -57,6 +59,7 @@ class PaperService:
         issue: str | None = None,
         first_page: str | None = None,
         last_page: str | None = None,
+        title_embeddings: list[float] | None = None,
     ) -> int:
         return self.add_paper(
             title,
@@ -72,6 +75,7 @@ class PaperService:
             issue,
             first_page,
             last_page,
+            title_embeddings,
         )
 
     def get_paper_count(self) -> int:

@@ -9,11 +9,56 @@ from etl.models import (
     ResearchArea,
     XMLData,
 )
+from settings import Settings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 
 class Transformer:
+    def __init__(self, enable_embeddings: bool | None = None) -> None:
+        if enable_embeddings is None:
+            try:
+                self.enable_embeddings = Settings().ENABLE_EMBEDDINGS
+            except Exception:
+                self.enable_embeddings = False
+        else:
+            self.enable_embeddings = enable_embeddings
+
+        if self.enable_embeddings:
+            settings = Settings()
+            self.embeddings_model: GoogleGenerativeAIEmbeddings | None = GoogleGenerativeAIEmbeddings(
+                model=settings.EMBEDDING_MODEL,
+                api_key=settings.GOOGLE_API_KEY,
+                output_dimensionality=settings.DIMENSIONS,
+            )
+        else:
+            self.embeddings_model = None
+
     def transform(self, data: list[XMLData]) -> list[XMLData]:
-        return [self.transform_xml_data(item) for item in data]
+        transformed_data = [self.transform_xml_data(item) for item in data]
+
+        if self.enable_embeddings and self.embeddings_model:
+            self._embed_titles(transformed_data)
+
+        return transformed_data
+
+    def _embed_titles(self, data: list[XMLData]) -> None:
+        papers_to_embed: list[Paper] = []
+        for item in data:
+            papers_to_embed.extend(item.researcher_data.papers)
+
+        if not papers_to_embed:
+            return
+
+        titles = [paper.title for paper in papers_to_embed]
+        # Embed in batches to avoid hitting rate limits or just for efficiency
+        # Google Generative AI embeddings usually handle lists
+        try:
+            assert self.embeddings_model is not None
+            embeddings = self.embeddings_model.embed_documents(titles)
+            for paper, embedding in zip(papers_to_embed, embeddings):
+                paper.title_embeddings = embedding
+        except Exception as e:
+            print(f"[ERROR] Failed to embed titles: {e}")
 
     def transform_xml_data(self, item: XMLData) -> XMLData:
         researcher = item.researcher_data

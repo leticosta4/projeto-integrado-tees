@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: SecretStr = Field(...)
     EMBEDDING_MODEL: str = Field(...)
     DIMENSIONS: int = Field(...)
+    ENABLE_EMBEDDINGS: bool = Field(default=True)
 
     def MIGRATION_URL(self) -> str:
         return f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.PG_HOST}:{self.PG_PORT}/{self.POSTGRES_DB}"

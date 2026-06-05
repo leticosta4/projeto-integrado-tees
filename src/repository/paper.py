@@ -32,6 +32,7 @@ class PaperRepository:
         issue: str | None = None,
         first_page: str | None = None,
         last_page: str | None = None,
+        title_embeddings: list[float] | None = None,
     ) -> int:
         sql = """
         INSERT INTO papers
@@ -48,10 +49,11 @@ class PaperRepository:
             volume,
             issue,
             first_page,
-            last_page
+            last_page,
+            title_embeddings
         )
         VALUES
-        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
         with self.pool.connection() as conn:
@@ -72,6 +74,7 @@ class PaperRepository:
                         issue,
                         first_page,
                         last_page,
+                        title_embeddings,
                     ),
                 )
                 row = cur.fetchone()
@@ -104,7 +107,8 @@ class PaperRepository:
             volume,
             issue,
             first_page,
-            last_page
+            last_page,
+            title_embeddings
         FROM papers
         WHERE title = %s
         """
