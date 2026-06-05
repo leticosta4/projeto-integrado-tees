@@ -49,16 +49,23 @@ class Transformer:
         if not papers_to_embed:
             return
 
-        titles = [paper.title for paper in papers_to_embed]
-        # Embed in batches to avoid hitting rate limits or just for efficiency
         # Google Generative AI embeddings usually handle lists
-        try:
-            assert self.embeddings_model is not None
-            embeddings = self.embeddings_model.embed_documents(titles)
-            for paper, embedding in zip(papers_to_embed, embeddings):
-                paper.title_embeddings = embedding
-        except Exception as e:
-            print(f"[ERROR] Failed to embed titles: {e}")
+        # We process in batches and sleep to avoid rate limits
+        batch_size = 100
+        for i in range(0, len(papers_to_embed), batch_size):
+            batch = papers_to_embed[i : i + batch_size]
+            titles = [paper.title for paper in batch]
+            
+            try:
+                assert self.embeddings_model is not None
+                embeddings = self.embeddings_model.embed_documents(titles)
+                for paper, embedding in zip(batch, embeddings):
+                    paper.title_embeddings = embedding
+                
+                if i + batch_size < len(papers_to_embed):
+                    time.sleep(1)  # 1s sleep between batches
+            except Exception as e:
+                print(f"[ERROR] Failed to embed titles: {e}")
 
     def transform_xml_data(self, item: XMLData) -> XMLData:
         researcher = item.researcher_data
