@@ -1,5 +1,6 @@
 from collections.abc import Callable, Hashable, Iterable
 from datetime import datetime
+import time
 
 from etl.models import (
     AcademicFormation,
