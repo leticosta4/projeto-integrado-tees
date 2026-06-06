@@ -49,6 +49,7 @@ class Storage:
                 paper.issue,
                 paper.first_page,
                 paper.last_page,
+                paper.title_embeddings,
             )
 
     def _store_academic_formations(

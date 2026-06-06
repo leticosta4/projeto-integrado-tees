@@ -11,6 +11,8 @@ from service.research_area import ResearchAreaService
 
 @pytest.fixture()
 def app():
+    import os
+    os.environ['ENABLE_EMBEDDINGS'] = 'False'
     app: Flask = create_app()
     app.config.update({
         'TESTING': True

@@ -23,6 +23,7 @@ class Paper(BaseModel):
     issue: str | None = None
     first_page: str | None = None
     last_page: str | None = None
+    title_embeddings: list[float] | None = None
 
 
 class AcademicFormation(BaseModel):

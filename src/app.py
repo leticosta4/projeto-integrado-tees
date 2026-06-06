@@ -8,6 +8,7 @@ from service.conference_paper import ConferencePaperService
 from service.paper import PaperService
 from service.research_area import ResearchAreaService
 from service.researcher import ResearcherService
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 def create_app():
     app = Flask(__name__)
@@ -26,8 +27,14 @@ def create_app():
 
     # Services
 
+    embeddings_model = GoogleGenerativeAIEmbeddings(
+        model=settings.EMBEDDING_MODEL,
+        api_key=settings.GOOGLE_API_KEY,
+        output_dimensionality=settings.DIMENSIONS,
+    )
+
     app.config['RESEARCHER_SERVICE'] = ResearcherService(pool)
-    app.config['PAPER_SERVICE'] = PaperService(pool)
+    app.config['PAPER_SERVICE'] = PaperService(pool, embeddings_model)
     app.config['ACADEMIC_FORMATION_SERVICE'] = AcademicFormationService(pool)
     app.config['RESEARCH_AREA_SERVICE'] = ResearchAreaService(pool)
     app.config['CONFERENCE_PAPER_SERVICE'] = ConferencePaperService(pool)
