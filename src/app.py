@@ -13,6 +13,14 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 def create_app():
     app = Flask(__name__)
 
+    @app.get("/")
+    def hello_world():
+        return {
+            "message": "Hello World",
+            "docs": "/api/docs",
+            "openapi": "/api/openapi.json",
+        }
+
     # App config
 
     settings: Settings = Settings()

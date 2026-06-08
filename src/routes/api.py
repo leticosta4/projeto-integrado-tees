@@ -6,6 +6,15 @@ from pydantic import BaseModel
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
+ENTITY_PATHS = {
+    "researchers": "Researchers",
+    "papers": "Papers",
+    "academic-formations": "Academic formations",
+    "research-areas": "Research areas",
+    "conference-papers": "Conference papers",
+    "advisings": "Advisings",
+}
+
 
 def serialize(model: BaseModel) -> dict[str, Any]:
     return model.model_dump(mode="json")
@@ -42,6 +51,151 @@ def not_found(entity: str):
 
 def created(item_id: int):
     return jsonify({"id": item_id}), 201
+
+
+@api.get("/health")
+def health():
+    return jsonify({"status": "ok"})
+
+
+@api.get("/docs")
+def swagger_docs():
+    return """
+    <!doctype html>
+    <html>
+      <head>
+        <title>Projeto Integrado TEES API</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+      </head>
+      <body>
+        <div id="swagger-ui"></div>
+        <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+        <script>
+          window.onload = () => {
+            window.ui = SwaggerUIBundle({
+              url: "/api/openapi.json",
+              dom_id: "#swagger-ui",
+            });
+          };
+        </script>
+      </body>
+    </html>
+    """
+
+
+@api.get("/openapi.json")
+def openapi_json():
+    return jsonify(build_openapi_spec())
+
+
+def build_openapi_spec() -> dict[str, Any]:
+    paths: dict[str, Any] = {
+        "/": {
+            "get": {
+                "summary": "Hello World",
+                "responses": {"200": {"description": "Application landing page"}},
+            }
+        },
+        "/api/health": {
+            "get": {
+                "summary": "Health check",
+                "responses": {"200": {"description": "API is running"}},
+            }
+        },
+        "/api/papers/search": {
+            "get": {
+                "tags": ["Papers"],
+                "summary": "Hybrid paper search",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": True,
+                        "schema": {"type": "string"},
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": False,
+                        "schema": {"type": "integer", "default": 10},
+                    },
+                ],
+                "responses": {
+                    "200": {"description": "Search results"},
+                    "400": {"description": "Invalid query or embeddings disabled"},
+                },
+            }
+        },
+    }
+
+    for entity, tag in ENTITY_PATHS.items():
+        paths[f"/api/{entity}"] = {
+            "get": {
+                "tags": [tag],
+                "summary": f"List {entity}",
+                "responses": {"200": {"description": "Entity list"}},
+            },
+            "post": {
+                "tags": [tag],
+                "summary": f"Create {entity}",
+                "requestBody": {
+                    "required": True,
+                    "content": {"application/json": {"schema": {"type": "object"}}},
+                },
+                "responses": {
+                    "201": {"description": "Created"},
+                    "400": {"description": "Missing required field"},
+                },
+            },
+        }
+        paths[f"/api/{entity}/{{item_id}}"] = {
+            "get": {
+                "tags": [tag],
+                "summary": f"Get {entity} by id",
+                "parameters": [path_id_parameter()],
+                "responses": {
+                    "200": {"description": "Entity found"},
+                    "404": {"description": "Entity not found"},
+                },
+            },
+            "patch": {
+                "tags": [tag],
+                "summary": f"Update {entity} by id",
+                "parameters": [path_id_parameter()],
+                "requestBody": {
+                    "required": True,
+                    "content": {"application/json": {"schema": {"type": "object"}}},
+                },
+                "responses": {
+                    "200": {"description": "Updated entity"},
+                    "404": {"description": "Entity not found"},
+                },
+            },
+            "delete": {
+                "tags": [tag],
+                "summary": f"Delete {entity} by id",
+                "parameters": [path_id_parameter()],
+                "responses": {"200": {"description": "Delete result"}},
+            },
+        }
+
+    return {
+        "openapi": "3.0.3",
+        "info": {
+            "title": "Projeto Integrado TEES API",
+            "version": "1.0.0",
+        },
+        "paths": paths,
+    }
+
+
+def path_id_parameter() -> dict[str, Any]:
+    return {
+        "name": "item_id",
+        "in": "path",
+        "required": True,
+        "schema": {"type": "integer"},
+    }
 
 
 def register_crud_routes(
