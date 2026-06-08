@@ -5,9 +5,10 @@ x-test-variables: &test
     POSTGRES_DB: postgres
     PG_HOST: tees-test-pgvector
     PG_PORT: 5432
-    GOOGLE_API_KEY: ${GOOGLE_API_KEY}
-    EMBEDDING_MODEL: ${EMBEDDING_MODEL}
-    DIMENSIONS: ${DIMENSIONS}
+    GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+    EMBEDDING_MODEL: ${EMBEDDING_MODEL:-models/text-embedding-004}
+    DIMENSIONS: ${DIMENSIONS:-128}
+    ENABLE_EMBEDDINGS: ${ENABLE_EMBEDDINGS:-False}
   networks:
     - tees-network
 

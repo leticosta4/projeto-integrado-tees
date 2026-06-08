@@ -203,6 +203,10 @@ cython_debug/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
+# Local sprint report artifacts
+relatorios/
+scripts/build_sprint3_report.py
+
 # Ruff stuff:
 .ruff_cache/
 

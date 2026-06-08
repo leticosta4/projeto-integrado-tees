@@ -1,7 +1,6 @@
 from psycopg_pool import ConnectionPool
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
+from embeddings import EmbeddingsModel
 from models.paper import Paper
 from repository.paper import PaperRepository
 
@@ -9,7 +8,7 @@ class PaperService:
     def __init__(
         self,
         pool: ConnectionPool,
-        embeddings_model: GoogleGenerativeAIEmbeddings | None = None
+        embeddings_model: EmbeddingsModel | None = None
     ) -> None:
         self.repository: PaperRepository = PaperRepository(pool)
         self.embeddings_model = embeddings_model
@@ -90,6 +89,18 @@ class PaperService:
 
     def get_paper_by_title(self, title: str) -> Paper | None:
         return self.repository.get_by_title(title)
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Paper]:
+        return self.repository.list_all(filters)
+
+    def get_by_id(self, paper_id: int) -> Paper | None:
+        return self.repository.get_by_id(paper_id)
+
+    def patch(self, paper_id: int, data: dict[str, object]) -> Paper | None:
+        return self.repository.patch(paper_id, data)
+
+    def remove_by_id(self, paper_id: int) -> int:
+        return self.repository.remove_by_id(paper_id)
 
     def hybrid_search(
         self,

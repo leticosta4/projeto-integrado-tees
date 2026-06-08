@@ -2,6 +2,26 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.paper import Paper
+from repository.crud import get_by_id, list_all, patch_by_id, remove_by_id
+
+
+PAPER_COLUMNS = [
+    "id",
+    "title",
+    "researcher_id",
+    "year",
+    "doi",
+    "language",
+    "nature",
+    "country",
+    "journal",
+    "issn",
+    "volume",
+    "issue",
+    "first_page",
+    "last_page",
+    "title_embeddings",
+]
 
 
 class PaperRepository:
@@ -90,6 +110,18 @@ class PaperRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Paper]:
+        return list_all(self.pool, "papers", PAPER_COLUMNS, Paper, filters)
+
+    def get_by_id(self, paper_id: int) -> Paper | None:
+        return get_by_id(self.pool, "papers", PAPER_COLUMNS, Paper, paper_id)
+
+    def patch(self, paper_id: int, data: dict[str, object]) -> Paper | None:
+        return patch_by_id(self.pool, "papers", PAPER_COLUMNS, Paper, paper_id, data)
+
+    def remove_by_id(self, paper_id: int) -> int:
+        return remove_by_id(self.pool, "papers", paper_id)
 
     def get_by_title(self, title: str) -> Paper | None:
         sql = """

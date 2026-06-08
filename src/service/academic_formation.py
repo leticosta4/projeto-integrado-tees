@@ -45,3 +45,22 @@ class AcademicFormationService:
         self, researcher_id: int
     ) -> list[AcademicFormation]:
         return self.repository.get_by_researcher_id(researcher_id)
+
+    def list_all(
+        self,
+        filters: dict[str, object] | None = None,
+    ) -> list[AcademicFormation]:
+        return self.repository.list_all(filters)
+
+    def get_by_id(self, formation_id: int) -> AcademicFormation | None:
+        return self.repository.get_by_id(formation_id)
+
+    def patch(
+        self,
+        formation_id: int,
+        data: dict[str, object],
+    ) -> AcademicFormation | None:
+        return self.repository.patch(formation_id, data)
+
+    def remove_by_id(self, formation_id: int) -> int:
+        return self.repository.remove_by_id(formation_id)

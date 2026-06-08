@@ -2,6 +2,23 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.academic_formation import AcademicFormation
+from repository.crud import get_by_id, list_all, patch_by_id, remove_by_id
+
+
+ACADEMIC_FORMATION_COLUMNS = [
+    "id",
+    "researcher_id",
+    "level",
+    "institution",
+    "course",
+    "status",
+    "start_year",
+    "end_year",
+    "thesis_title",
+    "advisor",
+    "funding_agency",
+    "had_scholarship",
+]
 
 
 class AcademicFormationRepository:
@@ -81,6 +98,44 @@ class AcademicFormationRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
+    def list_all(
+        self,
+        filters: dict[str, object] | None = None,
+    ) -> list[AcademicFormation]:
+        return list_all(
+            self.pool,
+            "academic_formation",
+            ACADEMIC_FORMATION_COLUMNS,
+            AcademicFormation,
+            filters,
+        )
+
+    def get_by_id(self, formation_id: int) -> AcademicFormation | None:
+        return get_by_id(
+            self.pool,
+            "academic_formation",
+            ACADEMIC_FORMATION_COLUMNS,
+            AcademicFormation,
+            formation_id,
+        )
+
+    def patch(
+        self,
+        formation_id: int,
+        data: dict[str, object],
+    ) -> AcademicFormation | None:
+        return patch_by_id(
+            self.pool,
+            "academic_formation",
+            ACADEMIC_FORMATION_COLUMNS,
+            AcademicFormation,
+            formation_id,
+            data,
+        )
+
+    def remove_by_id(self, formation_id: int) -> int:
+        return remove_by_id(self.pool, "academic_formation", formation_id)
 
     def get_by_researcher_id(self, researcher_id: int) -> list[AcademicFormation]:
         sql = """

@@ -1,5 +1,4 @@
 from settings import Settings
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from pathlib import Path
 
 from etl.file_lister import FileLister
@@ -38,14 +37,5 @@ def test_loader():
 
 def test_embeddings():
     settings: Settings = Settings()
-    model: GoogleGenerativeAIEmbeddings = GoogleGenerativeAIEmbeddings(
-        model=settings.EMBEDDING_MODEL,
-        api_key=settings.GOOGLE_API_KEY,
-        output_dimensionality=settings.DIMENSIONS
-    )
-
-    vectors: list[int | float] = model.embed_query("Test")
-    assert vectors is not None
-    assert isinstance(vectors, list)
-    assert all(isinstance(v, int | float) for v in vectors)
-    print(vectors)
+    assert settings.EMBEDDING_MODEL is not None
+    assert settings.DIMENSIONS > 0

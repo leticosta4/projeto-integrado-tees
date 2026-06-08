@@ -2,6 +2,20 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.researcher import Researcher
+from repository.crud import get_by_id, list_all, patch_by_id, remove_by_id
+
+
+RESEARCHER_COLUMNS = [
+    "id",
+    "full_name",
+    "lattes_id",
+    "citation_name",
+    "orcid",
+    "nationality",
+    "birth_country",
+    "birth_state",
+    "update_date",
+]
 
 
 class ResearcherRepository:
@@ -78,6 +92,37 @@ class ResearcherRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Researcher]:
+        return list_all(
+            self.pool,
+            "researcher",
+            RESEARCHER_COLUMNS,
+            Researcher,
+            filters,
+        )
+
+    def get_by_id(self, researcher_id: int) -> Researcher | None:
+        return get_by_id(
+            self.pool,
+            "researcher",
+            RESEARCHER_COLUMNS,
+            Researcher,
+            researcher_id,
+        )
+
+    def patch(self, researcher_id: int, data: dict[str, object]) -> Researcher | None:
+        return patch_by_id(
+            self.pool,
+            "researcher",
+            RESEARCHER_COLUMNS,
+            Researcher,
+            researcher_id,
+            data,
+        )
+
+    def remove_by_id(self, researcher_id: int) -> int:
+        return remove_by_id(self.pool, "researcher", researcher_id)
 
     def get_by_full_name(self, full_name: str) -> Researcher | None:
         sql = """

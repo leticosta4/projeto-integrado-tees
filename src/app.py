@@ -27,11 +27,13 @@ def create_app():
 
     # Services
 
-    embeddings_model = GoogleGenerativeAIEmbeddings(
-        model=settings.EMBEDDING_MODEL,
-        api_key=settings.GOOGLE_API_KEY,
-        output_dimensionality=settings.DIMENSIONS,
-    )
+    embeddings_model = None
+    if settings.ENABLE_EMBEDDINGS:
+        embeddings_model = GoogleGenerativeAIEmbeddings(
+            model=settings.EMBEDDING_MODEL,
+            api_key=settings.GOOGLE_API_KEY,
+            output_dimensionality=settings.DIMENSIONS,
+        )
 
     app.config['RESEARCHER_SERVICE'] = ResearcherService(pool)
     app.config['PAPER_SERVICE'] = PaperService(pool, embeddings_model)
@@ -40,9 +42,9 @@ def create_app():
     app.config['CONFERENCE_PAPER_SERVICE'] = ConferencePaperService(pool)
     app.config['ADVISING_SERVICE'] = AdvisingService(pool)
 
-    # Blueprints
-    #
-    # TODO:
+    from routes.api import api
+
+    app.register_blueprint(api)
     
     return app
 
