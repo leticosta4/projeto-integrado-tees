@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Projeto Integrado TEES</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+  </head>
+  <body>
+    <main class="page">
+      <header class="topbar">
+        <a class="brand" href="/">
+          <span class="brand-mark">PI</span>
+          <span>Projeto Integrado TEES</span>
+        </a>
+        <nav class="auth-actions" aria-label="Acesso">
+          <a class="button" href="#login">Login</a>
+          <a class="button primary" href="#cadastro">Cadastrar</a>
+        </nav>
+      </header>
+
+      <section class="hero">
+        <div>
+          <span class="eyebrow">Backend academico com dados Lattes</span>
+          <h1>Uma API para organizar producao academica e pesquisa.</h1>
+          <p class="lead">
+            Este trabalho integra extracao, transformacao e armazenamento de
+            curriculos academicos, permitindo consultar pesquisadores, artigos,
+            areas de pesquisa, formacoes, orientacoes e producoes em eventos por
+            meio de uma API Flask documentada com OpenAPI/Swagger.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="/api/docs">Abrir Swagger</a>
+            <a class="button" href="/api/openapi.json">Ver OpenAPI JSON</a>
+          </div>
+        </div>
+
+        <aside class="panel" aria-label="Referencias da API">
+          <div class="panel-header">
+            <strong>Referencias da rota</strong>
+            <span class="status">Online</span>
+          </div>
+          <div class="api-card">
+            <span>Mensagem</span>
+            <code>{"message": "Hello World"}</code>
+          </div>
+          <div class="api-card">
+            <span>Documentacao</span>
+            <code>/api/docs</code>
+          </div>
+          <div class="api-card">
+            <span>Especificacao</span>
+            <code>/api/openapi.json</code>
+          </div>
+        </aside>
+      </section>
+
+      <section class="reference-grid" aria-label="Resumo do projeto">
+        <article class="reference">
+          <span>ETL</span>
+          <h2>Dados tratados</h2>
+          <p>O fluxo carrega XMLs, normaliza informacoes academicas e prepara os registros para persistencia.</p>
+        </article>
+        <article class="reference">
+          <span>API</span>
+          <h2>Consultas e CRUD</h2>
+          <p>As rotas permitem listar, criar, atualizar e remover pesquisadores e producoes relacionadas.</p>
+        </article>
+        <article class="reference">
+          <span>Swagger</span>
+          <h2>Teste interativo</h2>
+          <p>A documentacao em Swagger facilita validar endpoints diretamente pelo navegador.</p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>

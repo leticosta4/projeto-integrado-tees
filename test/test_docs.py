@@ -5,7 +5,9 @@ def test_hello_world_page(client: FlaskClient):
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.get_json()["message"] == "Hello World"
+    assert b"Projeto Integrado TEES" in response.data
+    assert b"/api/docs" in response.data
+    assert b"/api/openapi.json" in response.data
 
 
 def test_health_endpoint(client: FlaskClient):
