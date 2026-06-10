@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Portal de Pesquisa Lattes{% endblock %}
+{% block body_class %}theme-night prototype-page{% endblock %}
+
+{% block content %}
+<div class="prototype-frame">
+  <aside class="prototype-sidebar" aria-label="Menu e filtros">
+    <nav class="side-menu">
+      <a class="active" href="{{ url_for('web.prototype_home_page') }}">
+        <span aria-hidden="true">⌂</span>
+        Inicio
+      </a>
+      <a href="#modulo-analitico">
+        <span aria-hidden="true">▥</span>
+        Modulo analitico
+      </a>
+      <a href="{{ url_for('api.swagger_docs') }}">
+        <span aria-hidden="true">≡</span>
+        API
+      </a>
+    </nav>
+
+    <form class="filter-panel" aria-label="Filtros de pesquisa">
+      <h2>☷ FILTROS</h2>
+
+      <fieldset>
+        <legend>Intervalo de Anos</legend>
+        <div class="year-row">
+          <label>
+            <span>Inicio</span>
+            <input type="number" value="2018" min="1900" max="2026">
+          </label>
+          <span>a</span>
+          <label>
+            <span>Fim</span>
+            <input type="number" value="2024" min="1900" max="2026">
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Tipo de Publicacao</legend>
+        <label class="check-row"><input type="checkbox"> Paper</label>
+        <label class="check-row"><input type="checkbox"> Conference Paper</label>
+        <label class="check-row"><input type="checkbox"> Advising</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Area da Pesquisa</legend>
+        <select aria-label="Area da pesquisa">
+          <option>Todas as Areas</option>
+          <option>Engenharia de Software</option>
+          <option>Banco de Dados</option>
+          <option>Inteligencia Artificial</option>
+        </select>
+      </fieldset>
+    </form>
+  </aside>
+
+  <main class="prototype-main">
+    <section class="search-hero" aria-label="Busca inicial">
+      <h1>Portal de Pesquisa Lattes</h1>
+      <form class="prototype-search">
+        <label class="search-input">
+          <span class="sr-only">Titulo ou pesquisador</span>
+          <input type="search" placeholder="" autofocus>
+          <span aria-hidden="true">⌕</span>
+        </label>
+        <button class="filter-button" type="button" aria-label="Abrir filtros">☷</button>
+      </form>
+    </section>
+  </main>
+
+  <div class="scroll-indicator" aria-hidden="true"></div>
+</div>
+{% endblock %}

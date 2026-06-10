@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from psycopg_pool import ConnectionPool
 from settings import Settings
@@ -13,10 +13,6 @@ from service.researcher import ResearcherService
 
 def create_app():
     app = Flask(__name__)
-
-    @app.get("/")
-    def hello_world():
-        return render_template("index.html")
 
     # App config
 
@@ -48,7 +44,9 @@ def create_app():
     app.config["ADVISING_SERVICE"] = AdvisingService(pool)
 
     from routes.api import api
+    from routes.web import web
 
+    app.register_blueprint(web)
     app.register_blueprint(api)
 
     return app

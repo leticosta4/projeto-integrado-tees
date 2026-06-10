@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Projeto Integrado TEES{% endblock %}
+{% block body_class %}theme-night landing-page{% endblock %}
+
+{% block content %}
+<main class="landing-shell">
+  <header class="landing-topbar">
+    <a class="brand" href="/">
+      <span class="brand-mark">PL</span>
+      <span>Portal de Pesquisa Lattes</span>
+    </a>
+    <nav class="auth-actions" aria-label="Acesso">
+      <a class="button ghost" href="#login">Login</a>
+      <a class="button filled" href="#cadastro">Cadastrar</a>
+    </nav>
+  </header>
+
+  <section class="landing-hero">
+    <div class="hero-copy">
+      <span class="section-kicker">Projeto Integrado TEES</span>
+      <h1>Uma plataforma noturna para explorar producao academica Lattes.</h1>
+      <p>
+        O trabalho organiza dados extraidos de curriculos academicos, transforma
+        informacoes de pesquisadores e producoes, armazena em PostgreSQL e expoe
+        uma API Flask documentada para consulta e testes.
+      </p>
+      <div class="hero-actions">
+        <a class="button filled" href="{{ url_for('web.prototype_home_page') }}">Acessar tela inicial</a>
+        <a class="button outline" href="{{ url_for('api.swagger_docs') }}">Testar no Swagger</a>
+      </div>
+    </div>
+
+    <aside class="landing-preview" aria-label="Previa da tela inicial">
+      <div class="preview-sidebar">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="preview-content">
+        <strong>Portal de Pesquisa Lattes</strong>
+        <div class="preview-search"></div>
+        <div class="preview-reference">
+          <span>/api/docs</span>
+          <span>/api/openapi.json</span>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="landing-reference" aria-label="Referencias da rota original">
+    <article>
+      <span>Mensagem</span>
+      <code>{"message": "Hello World"}</code>
+    </article>
+    <article>
+      <span>Documentacao</span>
+      <code>/api/docs</code>
+    </article>
+    <article>
+      <span>OpenAPI</span>
+      <code>/api/openapi.json</code>
+    </article>
+  </section>
+</main>
+{% endblock %}

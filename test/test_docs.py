@@ -8,6 +8,16 @@ def test_hello_world_page(client: FlaskClient):
     assert b"Projeto Integrado TEES" in response.data
     assert b"/api/docs" in response.data
     assert b"/api/openapi.json" in response.data
+    assert b"/inicio" in response.data
+
+
+def test_prototype_home_page(client: FlaskClient):
+    response = client.get("/inicio")
+
+    assert response.status_code == 200
+    assert b"Portal de Pesquisa Lattes" in response.data
+    assert b"FILTROS" in response.data
+    assert b"Modulo analitico" in response.data
 
 
 def test_health_endpoint(client: FlaskClient):

@@ -252,7 +252,7 @@ def create_researcher(service, data: dict[str, Any]) -> int:
         data["full_name"],
         data.get("filename", ""),
         data.get("filehash", ""),
-        data["lattes_id"],
+        data["lattes_id"],  
         data.get("citation_name"),
         data.get("orcid"),
         data.get("nationality"),
