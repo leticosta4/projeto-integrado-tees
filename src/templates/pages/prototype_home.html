@@ -21,7 +21,7 @@
       </a>
     </nav>
 
-    <form class="filter-panel" aria-label="Filtros de pesquisa">
+    <form class="filter-panel" id="filter-panel" aria-label="Filtros de pesquisa" hidden>
       <h2>☷ FILTROS</h2>
 
       <fieldset>
@@ -58,20 +58,76 @@
     </form>
   </aside>
 
-  <main class="prototype-main">
+  <main class="prototype-main {% if query %}with-results{% endif %}">
     <section class="search-hero" aria-label="Busca inicial">
       <h1>Portal de Pesquisa Lattes</h1>
-      <form class="prototype-search">
+      <form class="prototype-search" method="get" action="{{ url_for('web.prototype_home_page') }}">
         <label class="search-input">
           <span class="sr-only">Titulo ou pesquisador</span>
-          <input type="search" placeholder="" autofocus>
+          <input
+            type="search"
+            name="q"
+            value="{{ query }}"
+            placeholder="Titulo generico sendo pesquisado"
+            autofocus
+          >
           <span aria-hidden="true">⌕</span>
         </label>
-        <button class="filter-button" type="button" aria-label="Abrir filtros">☷</button>
+        <button
+          class="filter-button"
+          type="button"
+          aria-label="Abrir filtros"
+          aria-controls="filter-panel"
+          aria-expanded="false"
+          data-filter-toggle
+        >☷</button>
+        {% if query %}
+        <div class="sort-actions" aria-label="Ordenacao">
+          <button class="sort-button active" type="button">Relevancia</button>
+          <button class="sort-button" type="button">Data</button>
+        </div>
+        {% endif %}
       </form>
     </section>
+
+    {% if query %}
+    <section class="results-area" aria-label="Resultados da busca">
+      <div class="results-meta">
+        <span>{{ search_mode or "Busca" }}</span>
+        <strong>{{ results|length }} resultado{% if results|length != 1 %}s{% endif %}</strong>
+      </div>
+
+      {% if search_error %}
+      <p class="empty-results">Nao foi possivel consultar o banco: {{ search_error }}</p>
+      {% elif results %}
+      <div class="result-list">
+        {% for item in results %}
+        <article class="result-card">
+          <h2>{{ item.paper.title }}</h2>
+          <p>{{ item.summary }}</p>
+          <div class="result-author">
+            <div class="avatar" aria-hidden="true"></div>
+            <div>
+              <strong>{{ item.researcher_name }}</strong>
+              <span>Data de publicacao: {{ item.paper.year or "Ano nao informado" }}</span>
+            </div>
+            <a class="details-button" href="{{ url_for('api.papers_get', item_id=item.paper.id) }}">Ver Detalhes</a>
+            <a class="download-button" href="{{ url_for('api.papers_get', item_id=item.paper.id) }}" aria-label="Abrir JSON">⌄</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="empty-results">Nenhum resultado encontrado para "{{ query }}".</p>
+      {% endif %}
+    </section>
+    {% endif %}
   </main>
 
   <div class="scroll-indicator" aria-hidden="true"></div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/prototype-home.js') }}" defer></script>
 {% endblock %}

@@ -18,6 +18,38 @@ def test_prototype_home_page(client: FlaskClient):
     assert b"Portal de Pesquisa Lattes" in response.data
     assert b"FILTROS" in response.data
     assert b"Modulo analitico" in response.data
+    assert b'data-filter-toggle' in response.data
+    assert b'id="filter-panel"' in response.data
+    assert b"prototype-home.js" in response.data
+
+
+def test_prototype_home_search_uses_database(client: FlaskClient):
+    researcher_response = client.post(
+        "/api/researchers",
+        json={
+            "full_name": "Ada Lovelace",
+            "filename": "ada.xml",
+            "filehash": "hash-ada-home-search",
+            "lattes_id": "123-home-search",
+        },
+    )
+    researcher_id = researcher_response.get_json()["id"]
+
+    client.post(
+        "/api/papers",
+        json={
+            "title": "Artificial Intelligence in Healthcare",
+            "researcher_id": researcher_id,
+            "year": 2026,
+        },
+    )
+
+    response = client.get("/inicio?q=Healthcare")
+
+    assert response.status_code == 200
+    assert b"Artificial Intelligence in Healthcare" in response.data
+    assert b"Ada Lovelace" in response.data
+    assert b"Busca textual" in response.data
 
 
 def test_health_endpoint(client: FlaskClient):
