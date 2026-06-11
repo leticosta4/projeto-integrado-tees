@@ -2,7 +2,7 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.researcher import Researcher
-from repository.crud import list_all
+from repository.crud import get_by_id, list_all, patch_by_id, remove_by_id
 
 
 RESEARCHER_COLUMNS = [
@@ -140,3 +140,62 @@ class ResearcherRepository:
             filters,
         )
     
+    
+    def get_by_id(self, researcher_id: int) -> Researcher | None:
+        return get_by_id(
+            self.pool,
+            "researcher",
+            RESEARCHER_COLUMNS,
+            Researcher,
+            researcher_id,
+        )
+
+
+    def patch(self, researcher_id: int, data: dict[str, object]) -> Researcher | None:
+        return patch_by_id(
+            self.pool,
+            "researcher",
+            RESEARCHER_COLUMNS,
+            Researcher,
+            researcher_id,
+            data,
+        )
+
+
+    def remove_by_id(self, researcher_id: int) -> int:
+        return remove_by_id(self.pool, "researcher", researcher_id)
+
+
+    def get_by_full_name(self, full_name: str) -> Researcher | None:
+        sql = """
+        SELECT
+            id,
+            full_name,
+            lattes_id,
+            citation_name,
+            orcid,
+            nationality,
+            birth_country,
+            birth_state,
+            update_date
+        FROM researcher
+        WHERE full_name = %s
+        """
+        with self.pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(Researcher)) as cur:
+                _ = cur.execute(sql, (full_name,))
+                return cur.fetchone()
+
+
+    def select_filehash_exists(self, filehash: str) -> str | None:
+        sql = """
+        SELECT filehash
+        FROM researcher
+        WHERE filehash = %s
+        """
+        with self.pool.connection() as conn:
+            with conn.cursor() as cur:
+                _ = cur.execute(sql, (filehash,))
+                row = cur.fetchone()
+                return row[0] if row else None
+            
