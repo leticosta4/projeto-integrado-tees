@@ -2,11 +2,29 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.advising import Advising
+from repository.crud import list_all
+
+
+ADVISING_COLUMNS = [
+    "id",
+    "researcher_id",
+    "level",
+    "title",
+    "year",
+    "advisee_name",
+    "advising_type",
+    "institution",
+    "course",
+    "country",
+    "had_scholarship",
+    "funding_agency",
+]
 
 
 class AdvisingRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
+
 
     def remove_all(self) -> int:
         sql = """
@@ -16,6 +34,7 @@ class AdvisingRepository:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
                 return cur.rowcount
+
 
     def add(
         self,
@@ -71,6 +90,7 @@ class AdvisingRepository:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
+
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
@@ -81,6 +101,7 @@ class AdvisingRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
 
     def get_by_researcher_id(self, researcher_id: int) -> list[Advising]:
         sql = """
@@ -104,3 +125,8 @@ class AdvisingRepository:
             with conn.cursor(row_factory=class_row(Advising)) as cur:
                 _ = cur.execute(sql, (researcher_id,))
                 return cur.fetchall()
+
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Advising]:
+        return list_all(self.pool, "advising", ADVISING_COLUMNS, Advising, filters)
+    

@@ -2,11 +2,23 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.research_area import ResearchArea
+from repository.crud import list_all
+
+
+RESEARCH_AREA_COLUMNS = [
+    "id",
+    "researcher_id",
+    "major_area",
+    "area",
+    "sub_area",
+    "specialty",
+]
 
 
 class ResearchAreaRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
+
 
     def remove_all(self) -> int:
         sql = """
@@ -16,6 +28,7 @@ class ResearchAreaRepository:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
                 return cur.rowcount
+
 
     def add(
         self,
@@ -53,6 +66,7 @@ class ResearchAreaRepository:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
+
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
@@ -63,6 +77,7 @@ class ResearchAreaRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
 
     def get_by_researcher_id(self, researcher_id: int) -> list[ResearchArea]:
         sql = """
@@ -80,3 +95,14 @@ class ResearchAreaRepository:
             with conn.cursor(row_factory=class_row(ResearchArea)) as cur:
                 _ = cur.execute(sql, (researcher_id,))
                 return cur.fetchall()
+
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[ResearchArea]:
+        return list_all(
+            self.pool,
+            "research_area",
+            RESEARCH_AREA_COLUMNS,
+            ResearchArea,
+            filters,
+        )
+    
