@@ -14,8 +14,10 @@ class PaperService:
         self.repository: PaperRepository = PaperRepository(pool)
         self.embeddings_model = embeddings_model
 
+
     def remove_all_papers(self):
         return self.repository.remove_all()
+
 
     def add_paper(
         self,
@@ -51,6 +53,7 @@ class PaperService:
             title_embeddings,
         )
 
+
     def insert_paper(
         self,
         title: str,
@@ -85,11 +88,14 @@ class PaperService:
             title_embeddings,
         )
 
+
     def get_paper_count(self) -> int:
         return self.repository.count()
 
+
     def get_paper_by_title(self, title: str) -> Paper | None:
         return self.repository.get_by_title(title)
+
 
     def hybrid_search(
         self,
@@ -104,3 +110,8 @@ class PaperService:
         
         # Call repository search
         return self.repository.search(query, embedding, limit)
+    
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Paper]:
+        return self.repository.list_all(filters)
+    

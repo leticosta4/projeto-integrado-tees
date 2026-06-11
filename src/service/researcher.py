@@ -1,14 +1,16 @@
 from psycopg_pool import ConnectionPool
 from models.researcher import Researcher
 from repository.researcher import ResearcherRepository
-from etl.models import XMLData, ResearcherData
+from etl.models import XMLData
 
 class ResearcherService:
     def __init__(self, pool: ConnectionPool) -> None:
         self.repository: ResearcherRepository = ResearcherRepository(pool)
 
+
     def remove_all_researchers(self):
         return self.repository.remove_all()
+
 
     def add_researcher(
         self,
@@ -28,11 +30,18 @@ class ResearcherService:
             researcher_data.update_date,
         )
 
+
     def get_researcher_count(self) -> int:
         return self.repository.count()
+
 
     def get_researcher_by_name(self, full_name: str) -> Researcher | None:
         return self.repository.get_by_full_name(full_name)
 
+
     def get_researcher_filehash(self, filehash: str) -> str | None:
         return self.repository.select_filehash_exists(filehash)
+
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Researcher]:
+        return self.repository.list_all(filters)

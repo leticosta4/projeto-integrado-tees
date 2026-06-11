@@ -56,3 +56,4 @@ class AcademicFormationService:
         filters: dict[str, object] | None = None,
     ) -> list[AcademicFormation]:
         return self.repository.list_all(filters)
+    
