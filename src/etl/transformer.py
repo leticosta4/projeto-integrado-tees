@@ -10,12 +10,17 @@ from etl.models import (
     ResearchArea,
     XMLData,
 )
+from embeddings import EmbeddingsModel
 from settings import Settings
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 
 class Transformer:
-    def __init__(self, enable_embeddings: bool | None = None) -> None:
+    def __init__(
+        self,
+        enable_embeddings: bool | None = None,
+        embeddings_model: EmbeddingsModel | None = None,
+    ) -> None:
         if enable_embeddings is None:
             try:
                 self.enable_embeddings = Settings().ENABLE_EMBEDDINGS
@@ -24,9 +29,11 @@ class Transformer:
         else:
             self.enable_embeddings = enable_embeddings
 
-        if self.enable_embeddings:
+        if embeddings_model is not None:
+            self.embeddings_model = embeddings_model
+        elif self.enable_embeddings:
             settings = Settings()
-            self.embeddings_model: GoogleGenerativeAIEmbeddings | None = GoogleGenerativeAIEmbeddings(
+            self.embeddings_model: EmbeddingsModel | None = GoogleGenerativeAIEmbeddings(
                 model=settings.EMBEDDING_MODEL,
                 api_key=settings.GOOGLE_API_KEY,
                 output_dimensionality=settings.DIMENSIONS,

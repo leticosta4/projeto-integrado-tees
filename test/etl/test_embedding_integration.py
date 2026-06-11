@@ -1,9 +1,16 @@
-import pytest
-import os
 from flask import Flask
 from etl.transformer import Transformer
 from etl.models import XMLData, ResearcherData, Paper
 from etl.storage import Storage
+
+
+class FakeEmbeddingsModel:
+    def embed_query(self, text: str) -> list[float]:
+        return [float(len(text))] + [0.0] * 127
+
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return [self.embed_query(text) for text in texts]
+
 
 def test_transformer_generates_embeddings_when_enabled(app: Flask):
     """
@@ -31,9 +38,10 @@ def test_transformer_generates_embeddings_when_enabled(app: Flask):
         )
     )
 
-    # Force enable embeddings for this specific test
-    # Note: This requires a valid GOOGLE_API_KEY in the environment/settings
-    transformer = Transformer(enable_embeddings=True)
+    transformer = Transformer(
+        enable_embeddings=True,
+        embeddings_model=FakeEmbeddingsModel(),
+    )
     
     transformed_data = transformer.transform([mock_data])
     

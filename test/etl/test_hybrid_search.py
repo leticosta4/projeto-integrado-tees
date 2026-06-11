@@ -1,8 +1,15 @@
-import pytest
 from flask import Flask
-from etl.transformer import Transformer
 from etl.models import XMLData, ResearcherData, Paper as ETLPaper
-from etl.storage import Storage
+
+
+class FakeEmbeddingsModel:
+    def embed_query(self, text: str) -> list[float]:
+        lower = text.lower()
+        return [
+            1.0 if "health" in lower or "healthcare" in lower else 0.0,
+            1.0 if "ai" in lower or "artificial" in lower else 0.0,
+            float(len(text)) / 100.0,
+        ] + [0.0] * 125
 
 def test_hybrid_search_functionality(app: Flask):
     """
@@ -11,6 +18,7 @@ def test_hybrid_search_functionality(app: Flask):
     """
     paper_service = app.config['PAPER_SERVICE']
     researcher_service = app.config['RESEARCHER_SERVICE']
+    paper_service.embeddings_model = FakeEmbeddingsModel()
     
     # 1. Setup: Create a researcher
     # XMLData is needed for ResearcherService.add_researcher
@@ -30,7 +38,6 @@ def test_hybrid_search_functionality(app: Flask):
     researcher_id = researcher_service.add_researcher(mock_data)
     
     # 2. Setup: Create papers with specific titles and embeddings
-    # We'll use the actual embedding model to get "real" embeddings for our test papers
     embeddings_model = paper_service.embeddings_model
     
     paper_titles = [
