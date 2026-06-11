@@ -2,11 +2,26 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.researcher import Researcher
+from repository.crud import list_all
+
+
+RESEARCHER_COLUMNS = [
+    "id",
+    "full_name",
+    "lattes_id",
+    "citation_name",
+    "orcid",
+    "nationality",
+    "birth_country",
+    "birth_state",
+    "update_date",
+]
 
 
 class ResearcherRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
+
 
     def remove_all(self) -> int:
         sql = """
@@ -16,6 +31,7 @@ class ResearcherRepository:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
                 return cur.rowcount
+
 
     def add(
         self,
@@ -68,6 +84,7 @@ class ResearcherRepository:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
+
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
@@ -78,6 +95,7 @@ class ResearcherRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
 
     def get_by_full_name(self, full_name: str) -> Researcher | None:
         sql = """
@@ -99,6 +117,7 @@ class ResearcherRepository:
                 _ = cur.execute(sql, (full_name,))
                 return cur.fetchone()
 
+
     def select_filehash_exists(self, filehash: str) -> str | None:
         sql = """
         SELECT filehash
@@ -110,3 +129,14 @@ class ResearcherRepository:
                 _ = cur.execute(sql, (filehash,))
                 row = cur.fetchone()
                 return row[0] if row else None
+
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Researcher]:
+        return list_all(
+            self.pool,
+            "researcher",
+            RESEARCHER_COLUMNS,
+            Researcher,
+            filters,
+        )
+    

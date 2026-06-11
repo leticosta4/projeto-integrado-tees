@@ -2,11 +2,32 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.paper import Paper
+from repository.crud import list_all
+
+
+PAPER_COLUMNS = [
+    "id",
+    "title",
+    "researcher_id",
+    "year",
+    "doi",
+    "language",
+    "nature",
+    "country",
+    "journal",
+    "issn",
+    "volume",
+    "issue",
+    "first_page",
+    "last_page",
+    "title_embeddings",
+]
 
 
 class PaperRepository:
     def __init__(self, pool: ConnectionPool) -> None:
         self.pool: ConnectionPool = pool
+
 
     def remove_all(self) -> int:
         sql = """
@@ -16,6 +37,7 @@ class PaperRepository:
             with conn.cursor() as cur:
                 _ = cur.execute(sql)
                 return cur.rowcount
+
 
     def add(
         self,
@@ -80,6 +102,7 @@ class PaperRepository:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
+
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
@@ -90,6 +113,7 @@ class PaperRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
 
     def get_by_title(self, title: str) -> Paper | None:
         sql = """
@@ -116,6 +140,7 @@ class PaperRepository:
             with conn.cursor(row_factory=class_row(Paper)) as cur:
                 _ = cur.execute(sql, (title,))
                 return cur.fetchone()
+
 
     def search(
         self,
@@ -199,3 +224,8 @@ class PaperRepository:
                     )
                     results.append((paper, rrf_score))
                 return results
+
+
+    def list_all(self, filters: dict[str, object] | None = None) -> list[Paper]:
+        return list_all(self.pool, "papers", PAPER_COLUMNS, Paper, filters)
+    

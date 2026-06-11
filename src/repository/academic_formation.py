@@ -2,6 +2,23 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.academic_formation import AcademicFormation
+from repository.crud import list_all
+
+
+ACADEMIC_FORMATION_COLUMNS = [
+    "id",
+    "researcher_id",
+    "level",
+    "institution",
+    "course",
+    "status",
+    "start_year",
+    "end_year",
+    "thesis_title",
+    "advisor",
+    "funding_agency",
+    "had_scholarship",
+]
 
 
 class AcademicFormationRepository:
@@ -71,6 +88,7 @@ class AcademicFormationRepository:
                 row = cur.fetchone()
                 return row[0] if row else 0
 
+
     def count(self) -> int:
         sql = """
         SELECT COUNT(*)
@@ -81,6 +99,7 @@ class AcademicFormationRepository:
                 _ = cur.execute(sql)
                 row = cur.fetchone()
                 return row[0] if row else 0
+
 
     def get_by_researcher_id(self, researcher_id: int) -> list[AcademicFormation]:
         sql = """
@@ -104,3 +123,15 @@ class AcademicFormationRepository:
             with conn.cursor(row_factory=class_row(AcademicFormation)) as cur:
                 _ = cur.execute(sql, (researcher_id,))
                 return cur.fetchall()
+            
+    def list_all(
+        self,
+        filters: dict[str, object] | None = None,
+    ) -> list[AcademicFormation]:
+        return list_all(
+            self.pool,
+            "academic_formation",
+            ACADEMIC_FORMATION_COLUMNS,
+            AcademicFormation,
+            filters,
+        )

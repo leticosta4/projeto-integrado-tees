@@ -7,8 +7,10 @@ class AcademicFormationService:
     def __init__(self, pool: ConnectionPool) -> None:
         self.repository: AcademicFormationRepository = AcademicFormationRepository(pool)
 
+
     def remove_all_academic_formations(self):
         return self.repository.remove_all()
+
 
     def add_academic_formation(
         self,
@@ -38,10 +40,19 @@ class AcademicFormationService:
             had_scholarship,
         )
 
+
     def get_academic_formation_count(self) -> int:
         return self.repository.count()
+
 
     def get_academic_formations_by_researcher_id(
         self, researcher_id: int
     ) -> list[AcademicFormation]:
         return self.repository.get_by_researcher_id(researcher_id)
+
+
+    def list_all(
+        self,
+        filters: dict[str, object] | None = None,
+    ) -> list[AcademicFormation]:
+        return self.repository.list_all(filters)
