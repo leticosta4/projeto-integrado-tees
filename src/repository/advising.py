@@ -2,7 +2,7 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.advising import Advising
-from repository.crud import list_all
+from repository.crud import get_by_id, list_all, patch_by_id, remove_by_id
 
 
 ADVISING_COLUMNS = [
@@ -130,3 +130,46 @@ class AdvisingRepository:
     def list_all(self, filters: dict[str, object] | None = None) -> list[Advising]:
         return list_all(self.pool, "advising", ADVISING_COLUMNS, Advising, filters)
     
+
+    def get_by_id(self, advising_id: int) -> Advising | None:
+        return get_by_id(self.pool, "advising", ADVISING_COLUMNS, Advising, advising_id)
+
+
+    def patch(self, advising_id: int, data: dict[str, object]) -> Advising | None:
+        return patch_by_id(
+            self.pool,
+            "advising",
+            ADVISING_COLUMNS,
+            Advising,
+            advising_id,
+            data,
+        )
+
+
+    def remove_by_id(self, advising_id: int) -> int:
+        return remove_by_id(self.pool, "advising", advising_id)
+
+
+    def get_by_researcher_id(self, researcher_id: int) -> list[Advising]:
+        sql = """
+        SELECT
+            id,
+            researcher_id,
+            level,
+            title,
+            year,
+            advisee_name,
+            advising_type,
+            institution,
+            course,
+            country,
+            had_scholarship,
+            funding_agency
+        FROM advising
+        WHERE researcher_id = %s
+        """
+        with self.pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(Advising)) as cur:
+                _ = cur.execute(sql, (researcher_id,))
+                return cur.fetchall()
+            

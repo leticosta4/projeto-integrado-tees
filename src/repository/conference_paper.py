@@ -2,7 +2,7 @@ from psycopg.rows import class_row
 from psycopg_pool import ConnectionPool
 
 from models.conference_paper import ConferencePaper
-from repository.crud import list_all
+from repository.crud import get_by_id, list_all, patch_by_id, remove_by_id
 
 
 CONFERENCE_PAPER_COLUMNS = [
@@ -159,3 +159,57 @@ class ConferencePaperRepository:
             filters,
         )
     
+
+    def get_by_id(self, conference_paper_id: int) -> ConferencePaper | None:
+        return get_by_id(
+            self.pool,
+            "conference_paper",
+            CONFERENCE_PAPER_COLUMNS,
+            ConferencePaper,
+            conference_paper_id,
+        )
+
+    def patch(
+        self,
+        conference_paper_id: int,
+        data: dict[str, object],
+    ) -> ConferencePaper | None:
+        return patch_by_id(
+            self.pool,
+            "conference_paper",
+            CONFERENCE_PAPER_COLUMNS,
+            ConferencePaper,
+            conference_paper_id,
+            data,
+        )
+
+    def remove_by_id(self, conference_paper_id: int) -> int:
+        return remove_by_id(self.pool, "conference_paper", conference_paper_id)
+
+    def get_by_researcher_id(self, researcher_id: int) -> list[ConferencePaper]:
+        sql = """
+        SELECT
+            id,
+            researcher_id,
+            title,
+            year,
+            nature,
+            country,
+            language,
+            doi,
+            event_name,
+            event_city,
+            event_year,
+            event_classification,
+            proceedings_title,
+            isbn,
+            first_page,
+            last_page
+        FROM conference_paper
+        WHERE researcher_id = %s
+        """
+        with self.pool.connection() as conn:
+            with conn.cursor(row_factory=class_row(ConferencePaper)) as cur:
+                _ = cur.execute(sql, (researcher_id,))
+                return cur.fetchall()
+            
