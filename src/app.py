@@ -8,10 +8,24 @@ from service.conference_paper import ConferencePaperService
 from service.paper import PaperService
 from service.research_area import ResearchAreaService
 from service.researcher import ResearcherService
+from routes.academic_formation import academic_formation_bp
+from routes.advising import advising_bp
+from routes.conference_paper import conference_paper_bp
+from routes.paper import paper_bp
+from routes.research_area import research_area_bp
+from routes.researcher import researcher_bp
+from routes.swagger import api_bp
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 def create_app():
     app = Flask(__name__)
+
+    @app.get("/")
+    def home():
+        return {
+            "message": "Hello World",
+            "swagger": "/api/docs",
+        }
 
     # App config
 
@@ -27,11 +41,16 @@ def create_app():
 
     # Services
 
-    embeddings_model = GoogleGenerativeAIEmbeddings(
-        model=settings.EMBEDDING_MODEL,
-        api_key=settings.GOOGLE_API_KEY,
-        output_dimensionality=settings.DIMENSIONS,
-    )
+    embeddings_model = None
+
+    if settings.ENABLE_EMBEDDINGS:
+        embedding_model, api_key, dimensions = settings.EMBEDDINGS_CONFIG()
+
+        embeddings_model = GoogleGenerativeAIEmbeddings(
+            model=embedding_model,
+            api_key=api_key,
+            output_dimensionality=dimensions,
+        )
 
     app.config['RESEARCHER_SERVICE'] = ResearcherService(pool)
     app.config['PAPER_SERVICE'] = PaperService(pool, embeddings_model)
@@ -41,8 +60,14 @@ def create_app():
     app.config['ADVISING_SERVICE'] = AdvisingService(pool)
 
     # Blueprints
-    #
-    # TODO:
+
+    app.register_blueprint(api_bp)
+    app.register_blueprint(researcher_bp)
+    app.register_blueprint(paper_bp)
+    app.register_blueprint(academic_formation_bp)
+    app.register_blueprint(research_area_bp)
+    app.register_blueprint(conference_paper_bp)
+    app.register_blueprint(advising_bp)
     
     return app
 

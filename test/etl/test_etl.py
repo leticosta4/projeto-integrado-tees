@@ -38,10 +38,11 @@ def test_loader():
 
 def test_embeddings():
     settings: Settings = Settings()
+    embedding_model, api_key, dimensions = settings.EMBEDDINGS_CONFIG()
     model: GoogleGenerativeAIEmbeddings = GoogleGenerativeAIEmbeddings(
-        model=settings.EMBEDDING_MODEL,
-        api_key=settings.GOOGLE_API_KEY,
-        output_dimensionality=settings.DIMENSIONS
+        model=embedding_model,
+        api_key=api_key,
+        output_dimensionality=dimensions
     )
 
     vectors: list[int | float] = model.embed_query("Test")

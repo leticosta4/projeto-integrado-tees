@@ -41,4 +41,16 @@ class ResearchAreaService:
 
     def list_all(self, filters: dict[str, object] | None = None) -> list[ResearchArea]:
         return self.repository.list_all(filters)
+
+
+    def get_by_id(self, area_id: int) -> ResearchArea | None:
+        return self.repository.get_by_id(area_id)
+
+
+    def patch(self, area_id: int, data: dict[str, object]) -> ResearchArea | None:
+        return self.repository.patch(area_id, data)
+
+
+    def remove_by_id(self, area_id: int) -> int:
+        return self.repository.remove_by_id(area_id)
     
