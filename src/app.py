@@ -44,20 +44,12 @@ def create_app():
     embeddings_model = None
 
     if settings.ENABLE_EMBEDDINGS:
-        if (
-            settings.GOOGLE_API_KEY is None
-            or settings.EMBEDDING_MODEL is None
-            or settings.DIMENSIONS is None
-        ):
-            raise ValueError(
-                "GOOGLE_API_KEY, EMBEDDING_MODEL and DIMENSIONS are required "
-                "when ENABLE_EMBEDDINGS is true"
-            )
+        embedding_model, api_key, dimensions = settings.EMBEDDINGS_CONFIG()
 
         embeddings_model = GoogleGenerativeAIEmbeddings(
-            model=settings.EMBEDDING_MODEL,
-            api_key=settings.GOOGLE_API_KEY,
-            output_dimensionality=settings.DIMENSIONS,
+            model=embedding_model,
+            api_key=api_key,
+            output_dimensionality=dimensions,
         )
 
     app.config['RESEARCHER_SERVICE'] = ResearcherService(pool)

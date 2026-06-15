@@ -1,7 +1,6 @@
 from psycopg_pool import ConnectionPool
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
+from embeddings import EmbeddingsModel, LocalEmbeddings
 from models.paper import Paper
 from repository.paper import PaperRepository
 
@@ -9,10 +8,12 @@ class PaperService:
     def __init__(
         self,
         pool: ConnectionPool,
-        embeddings_model: GoogleGenerativeAIEmbeddings | None = None
+        embeddings_model: EmbeddingsModel | None = None
     ) -> None:
         self.repository: PaperRepository = PaperRepository(pool)
-        self.embeddings_model = embeddings_model
+        self.embeddings_model: EmbeddingsModel = (
+            embeddings_model if embeddings_model is not None else LocalEmbeddings()
+        )
 
 
     def remove_all_papers(self):
@@ -102,13 +103,8 @@ class PaperService:
         query: str,
         limit: int = 10,
     ) -> list[tuple[Paper, float]]:
-        if not self.embeddings_model:
-            raise ValueError("Embeddings model not configured for PaperService")
-
-        # Generate embedding for the query
         embedding = self.embeddings_model.embed_query(query)
         
-        # Call repository search
         return self.repository.search(query, embedding, limit)
     
 

@@ -20,4 +20,17 @@ class Settings(BaseSettings):
     def DAO_URL(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.PG_HOST}:{self.PG_PORT}/{self.POSTGRES_DB}"
 
+    def EMBEDDINGS_CONFIG(self) -> tuple[str, SecretStr, int]:
+        if (
+            self.GOOGLE_API_KEY is None
+            or self.EMBEDDING_MODEL is None
+            or self.DIMENSIONS is None
+        ):
+            raise ValueError(
+                "GOOGLE_API_KEY, EMBEDDING_MODEL and DIMENSIONS are required "
+                "when embeddings are enabled"
+            )
+
+        return self.EMBEDDING_MODEL, self.GOOGLE_API_KEY, self.DIMENSIONS
+
     model_config = SettingsConfigDict(env_file='.env')
