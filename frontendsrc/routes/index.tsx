@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, SlidersHorizontal, User } from "lucide-react";
-import { researchers } from "@/lib/mock-data";
+import { fetchResearchers } from "@/lib/api";
+import { fetchResearchers } from "@/lib/api";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,13 +32,11 @@ function Home() {
     }
   };
 
-  const results = hasQuery
-    ? researchers.filter(
-        (r) =>
-          r.name.toLowerCase().includes(committedQuery.toLowerCase()) ||
-          r.areas.some((a) => a.toLowerCase().includes(committedQuery.toLowerCase())),
-      )
-    : [];
+  const { data: results = [] } = useQuery({
+    queryKey: ["researchers", committedQuery],
+    queryFn: () => fetchResearchers({ q: committedQuery }),
+    enabled: hasQuery,
+  });
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">

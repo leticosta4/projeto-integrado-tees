@@ -15,10 +15,13 @@ from routes.paper import paper_bp
 from routes.research_area import research_area_bp
 from routes.researcher import researcher_bp
 from routes.swagger import api_bp
+
+from flask_cors import CORS
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)  # libera tudo em dev; precisamos restringir em prod
 
     @app.get("/")
     def home():
