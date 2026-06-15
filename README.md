@@ -41,3 +41,6 @@ projeto final de tópicos especiais em engneharia de software
 - `uv run pytest --cov --durations=0`
 
 - Rode com Docker (Bash necessário): `chmod +x ./scripts/ci.sh`, `./ci.sh`
+
+## Docs da api
+Feito via swagger: porta 5000, endpoint `/api/docs`

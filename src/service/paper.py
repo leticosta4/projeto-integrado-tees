@@ -114,4 +114,16 @@ class PaperService:
 
     def list_all(self, filters: dict[str, object] | None = None) -> list[Paper]:
         return self.repository.list_all(filters)
+
+
+    def get_by_id(self, paper_id: int) -> Paper | None:
+        return self.repository.get_by_id(paper_id)
+
+
+    def patch(self, paper_id: int, data: dict[str, object]) -> Paper | None:
+        return self.repository.patch(paper_id, data)
+
+
+    def remove_by_id(self, paper_id: int) -> int:
+        return self.repository.remove_by_id(paper_id)
     

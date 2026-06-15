@@ -50,4 +50,16 @@ class AdvisingService:
 
     def list_all(self, filters: dict[str, object] | None = None) -> list[Advising]:
         return self.repository.list_all(filters)
+
+
+    def get_by_id(self, advising_id: int) -> Advising | None:
+        return self.repository.get_by_id(advising_id)
+
+
+    def patch(self, advising_id: int, data: dict[str, object]) -> Advising | None:
+        return self.repository.patch(advising_id, data)
+
+
+    def remove_by_id(self, advising_id: int) -> int:
+        return self.repository.remove_by_id(advising_id)
     

@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     PG_HOST: str = Field(...)
     PG_PORT: str = Field(...)
 
-    GOOGLE_API_KEY: SecretStr = Field(...)
-    EMBEDDING_MODEL: str = Field(...)
-    DIMENSIONS: int = Field(...)
+    GOOGLE_API_KEY: SecretStr | None = Field(default=None)
+    EMBEDDING_MODEL: str | None = Field(default=None)
+    DIMENSIONS: int | None = Field(default=None)
     ENABLE_EMBEDDINGS: bool = Field(default=True)
 
     def MIGRATION_URL(self) -> str:
