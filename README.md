@@ -44,3 +44,9 @@ projeto final de tópicos especiais em engneharia de software
 
 ## Docs da api
 Feito via swagger: porta 5000, endpoint `/api/docs`
+
+
+## Para o front
+
+- `npm install`
+- `npm run dev`
