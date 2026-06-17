@@ -76,6 +76,11 @@ export type SearchResult = {
   score: number;
 };
 
+type RawSearchResult = {
+  paper: Paper;
+  score: number | string | null;
+};
+
 type QueryValue = string | number | boolean | null | undefined;
 
 function apiBaseUrl() {
@@ -141,7 +146,11 @@ export function listAdvisings(query?: Record<string, QueryValue>) {
 
 export async function searchPapers(query: string, limit = 10) {
   try {
-    return await apiFetch<SearchResult[]>("/papers/search", { q: query, limit });
+    const results = await apiFetch<RawSearchResult[]>("/papers/search", { q: query, limit });
+    return results.map(({ paper, score }) => ({
+      paper,
+      score: typeof score === "number" ? score : Number(score ?? 0),
+    }));
   } catch {
     const papers = await listPapers();
     const lowered = query.toLowerCase();
