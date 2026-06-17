@@ -4,6 +4,9 @@ import { Search, SlidersHorizontal, User } from "lucide-react";
 import { researchers } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : "",
+  }),
   head: () => ({
     meta: [
       { title: "Portal de Pesquisa Lattes" },
@@ -14,19 +17,19 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-  const [query, setQuery] = useState("");
-  const [committedQuery, setCommittedQuery] = useState("");
+  const { q: committedQuery } = Route.useSearch();
+  const [query, setQuery] = useState(committedQuery);
   const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
   const hasQuery = committedQuery.trim().length > 0;
 
   const handleSearch = () => {
-    setCommittedQuery(query);
+    navigate({ to: "/", search: { q: query }, replace: true });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      setCommittedQuery(query);
+      handleSearch();
     }
   };
 
