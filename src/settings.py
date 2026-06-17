@@ -33,4 +33,4 @@ class Settings(BaseSettings):
 
         return self.EMBEDDING_MODEL, self.GOOGLE_API_KEY, self.DIMENSIONS
 
-    model_config = SettingsConfigDict(env_file='.env')
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore')

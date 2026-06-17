@@ -32,7 +32,7 @@ def search_papers():
 
     service = current_app.config["PAPER_SERVICE"]
     results = [
-        {"paper": model_to_dict(paper), "score": score}
+        {"paper": model_to_dict(paper), "score": float(score or 0)}
         for paper, score in service.hybrid_search(query, limit)
     ]
     return jsonify(results)
