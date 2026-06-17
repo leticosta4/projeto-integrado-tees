@@ -1,6 +1,6 @@
 from psycopg_pool import ConnectionPool
 from settings import Settings
-from flask import Flask
+from flask import Flask, request
 
 from service.academic_formation import AcademicFormationService
 from service.advising import AdvisingService
@@ -19,6 +19,16 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 def create_app():
     app = Flask(__name__)
+
+    @app.after_request
+    def add_cors_headers(response):
+        origin = request.headers.get("Origin")
+        if origin in {"http://localhost:5173", "http://127.0.0.1:5173"}:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
+        return response
 
     @app.get("/")
     def home():
