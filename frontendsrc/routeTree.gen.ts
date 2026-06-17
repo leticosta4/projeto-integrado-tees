@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ModuloAnaliticoRouteImport } from './routes/modulo-analitico'
+import { Route as ApiRouteImport } from './routes/api'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PesquisadorIdRouteImport } from './routes/pesquisador.$id'
 
 const ModuloAnaliticoRoute = ModuloAnaliticoRouteImport.update({
   id: '/modulo-analitico',
   path: '/modulo-analitico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRoute = ApiRouteImport.update({
+  id: '/api',
+  path: '/api',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,30 +37,34 @@ const PesquisadorIdRoute = PesquisadorIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api': typeof ApiRoute
   '/modulo-analitico': typeof ModuloAnaliticoRoute
   '/pesquisador/$id': typeof PesquisadorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api': typeof ApiRoute
   '/modulo-analitico': typeof ModuloAnaliticoRoute
   '/pesquisador/$id': typeof PesquisadorIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api': typeof ApiRoute
   '/modulo-analitico': typeof ModuloAnaliticoRoute
   '/pesquisador/$id': typeof PesquisadorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/modulo-analitico' | '/pesquisador/$id'
+  fullPaths: '/' | '/api' | '/modulo-analitico' | '/pesquisador/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/modulo-analitico' | '/pesquisador/$id'
-  id: '__root__' | '/' | '/modulo-analitico' | '/pesquisador/$id'
+  to: '/' | '/api' | '/modulo-analitico' | '/pesquisador/$id'
+  id: '__root__' | '/' | '/api' | '/modulo-analitico' | '/pesquisador/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiRoute: typeof ApiRoute
   ModuloAnaliticoRoute: typeof ModuloAnaliticoRoute
   PesquisadorIdRoute: typeof PesquisadorIdRoute
 }
@@ -66,6 +76,13 @@ declare module '@tanstack/react-router' {
       path: '/modulo-analitico'
       fullPath: '/modulo-analitico'
       preLoaderRoute: typeof ModuloAnaliticoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api': {
+      id: '/api'
+      path: '/api'
+      fullPath: '/api'
+      preLoaderRoute: typeof ApiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,6 +104,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiRoute: ApiRoute,
   ModuloAnaliticoRoute: ModuloAnaliticoRoute,
   PesquisadorIdRoute: PesquisadorIdRoute,
 }
