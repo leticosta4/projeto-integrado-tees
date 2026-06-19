@@ -62,7 +62,7 @@ function Home() {
   const navigate = useNavigate();
   const hasQuery = committedQuery.trim().length > 0;
 
-  // Filtros
+
   const [yearFrom, setYearFrom] = useState("");
   const [yearTo, setYearTo] = useState("");
   const [typeFilters, setTypeFilters] = useState<Record<PublicationType, boolean>>({
@@ -158,8 +158,7 @@ function Home() {
     return grouped;
   }, [areas]);
 
-  // Verifica se um ano esta dentro do intervalo escolhido. Itens sem ano
-  // nao sao excluidos (nao temos como saber se estariam dentro do intervalo).
+ 
   const isWithinYearRange = useMemo(() => {
     const fromYear = yearFrom.trim() ? Number(yearFrom) : null;
     const toYear = yearTo.trim() ? Number(yearTo) : null;
@@ -171,8 +170,6 @@ function Home() {
     };
   }, [yearFrom, yearTo]);
 
-  // IDs de pesquisadores que tem pelo menos uma producao de algum dos tipos
-  // selecionados (respeitando o intervalo de anos para papers/conference papers).
   const eligibleResearcherIds = useMemo(() => {
     const ids = new Set<number>();
 
@@ -214,8 +211,7 @@ function Home() {
     });
   }, [areasByResearcher, committedQuery, eligibleResearcherIds, hasQuery, researchers]);
 
-  // Os resultados de "Publicacoes" exibidos sao sempre do tipo Paper, entao
-  // so aparecem se esse tipo estiver marcado, e respeitam o intervalo de anos.
+
   const filteredPaperResults = useMemo(() => {
     if (!typeFilters.Paper) return [];
     return paperResults.filter(({ paper }) => isWithinYearRange(paper.year));
