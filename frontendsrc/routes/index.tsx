@@ -1,11 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { FileText, Search, SlidersHorizontal, User } from "lucide-react";
+import { Check, FileText, Search, SlidersHorizontal, User } from "lucide-react";
 import {
+  listAdvisings,
+  listConferencePapers,
   listPapers,
   listResearchAreas,
   listResearchers,
   searchPapers,
+  type Advising,
+  type ConferencePaper,
   type Paper,
   type ResearchArea,
   type Researcher,
@@ -21,6 +25,12 @@ export const Route = createFileRoute("/")({
   }),
   component: Home,
 });
+
+const PUBLICATION_TYPES = ["Paper", "Conference Paper", "Advising"] as const;
+type PublicationType = (typeof PUBLICATION_TYPES)[number];
+
+const RESULT_KINDS = ["Pesquisadores", "Publicacoes"] as const;
+type ResultKind = (typeof RESULT_KINDS)[number];
 
 function normalize(value: string | null | undefined) {
   return (value ?? "").toLowerCase();
@@ -42,6 +52,8 @@ function Home() {
   const [showFilters, setShowFilters] = useState(false);
   const [researchers, setResearchers] = useState<Researcher[]>([]);
   const [papers, setPapers] = useState<Paper[]>([]);
+  const [conferencePapers, setConferencePapers] = useState<ConferencePaper[]>([]);
+  const [advisings, setAdvisings] = useState<Advising[]>([]);
   const [areas, setAreas] = useState<ResearchArea[]>([]);
   const [paperResults, setPaperResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,22 +62,40 @@ function Home() {
   const navigate = useNavigate();
   const hasQuery = committedQuery.trim().length > 0;
 
+
+  const [yearFrom, setYearFrom] = useState("");
+  const [yearTo, setYearTo] = useState("");
+  const [typeFilters, setTypeFilters] = useState<Record<PublicationType, boolean>>({
+    Paper: true,
+    "Conference Paper": true,
+    Advising: true,
+  });
+  const [resultKinds, setResultKinds] = useState<Record<ResultKind, boolean>>({
+    Pesquisadores: true,
+    Publicacoes: true,
+  });
+  const [filtersApplied, setFiltersApplied] = useState(false);
+
   useEffect(() => {
     let active = true;
 
     async function loadInitialData() {
       try {
         setLoading(true);
-        const [researcherData, paperData, areaData] = await Promise.all([
+        const [researcherData, paperData, areaData, conferenceData, advisingData] = await Promise.all([
           listResearchers(),
           listPapers(),
           listResearchAreas(),
+          listConferencePapers(),
+          listAdvisings(),
         ]);
 
         if (!active) return;
         setResearchers(researcherData);
         setPapers(paperData);
         setAreas(areaData);
+        setConferencePapers(conferenceData);
+        setAdvisings(advisingData);
         setError(null);
       } catch (err) {
         if (!active) return;
@@ -128,11 +158,49 @@ function Home() {
     return grouped;
   }, [areas]);
 
+ 
+  const isWithinYearRange = useMemo(() => {
+    const fromYear = yearFrom.trim() ? Number(yearFrom) : null;
+    const toYear = yearTo.trim() ? Number(yearTo) : null;
+    return (year: number | null | undefined) => {
+      if (year == null) return true;
+      if (fromYear != null && year < fromYear) return false;
+      if (toYear != null && year > toYear) return false;
+      return true;
+    };
+  }, [yearFrom, yearTo]);
+
+  const eligibleResearcherIds = useMemo(() => {
+    const ids = new Set<number>();
+
+    if (typeFilters.Paper) {
+      for (const paper of papers) {
+        if (isWithinYearRange(paper.year)) ids.add(paper.researcher_id);
+      }
+    }
+
+    if (typeFilters["Conference Paper"]) {
+      for (const conferencePaper of conferencePapers) {
+        if (isWithinYearRange(conferencePaper.year)) ids.add(conferencePaper.researcher_id);
+      }
+    }
+
+    if (typeFilters.Advising) {
+      for (const advising of advisings) {
+        ids.add(advising.researcher_id);
+      }
+    }
+
+    return ids;
+  }, [papers, conferencePapers, advisings, typeFilters, isWithinYearRange]);
+
   const researcherResults = useMemo(() => {
     if (!hasQuery) return [];
     const lowered = normalize(committedQuery);
 
     return researchers.filter((researcher) => {
+      if (!eligibleResearcherIds.has(researcher.id)) return false;
+
       const researcherAreas = uniqueAreas(areasByResearcher.get(researcher.id) ?? []);
       return (
         normalize(researcher.full_name).includes(lowered) ||
@@ -141,7 +209,19 @@ function Home() {
         researcherAreas.some((area) => normalize(area).includes(lowered))
       );
     });
-  }, [areasByResearcher, committedQuery, hasQuery, researchers]);
+  }, [areasByResearcher, committedQuery, eligibleResearcherIds, hasQuery, researchers]);
+
+
+  const filteredPaperResults = useMemo(() => {
+    if (!typeFilters.Paper) return [];
+    return paperResults.filter(({ paper }) => isWithinYearRange(paper.year));
+  }, [paperResults, typeFilters, isWithinYearRange]);
+
+  const showResearchers = resultKinds.Pesquisadores;
+  const showPublications = resultKinds.Publicacoes;
+
+  const visibleResearcherResults = showResearchers ? researcherResults : [];
+  const visiblePaperResults = showPublications ? filteredPaperResults : [];
 
   const handleSearch = () => {
     setCommittedQuery(query.trim());
@@ -151,7 +231,103 @@ function Home() {
     if (e.key === "Enter") handleSearch();
   };
 
-  const totalResults = researcherResults.length + paperResults.length;
+  const toggleType = (type: PublicationType) => {
+    setTypeFilters((current) => ({ ...current, [type]: !current[type] }));
+  };
+
+  const toggleResultKind = (kind: ResultKind) => {
+    setResultKinds((current) => ({ ...current, [kind]: !current[kind] }));
+  };
+
+  const handleApplyFilters = () => {
+    setFiltersApplied(true);
+    setTimeout(() => setFiltersApplied(false), 1500);
+  };
+
+  const totalResults = visibleResearcherResults.length + visiblePaperResults.length;
+
+  const filtersPanel = (
+    <div className="rounded-xl border border-border bg-card p-5">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div>
+          <label className="mb-2 block text-xs font-medium text-muted-foreground">
+            Intervalo de Anos
+          </label>
+          <div className="flex gap-2">
+            <input
+              value={yearFrom}
+              onChange={(e) => setYearFrom(e.target.value)}
+              placeholder="De"
+              inputMode="numeric"
+              className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            />
+            <input
+              value={yearTo}
+              onChange={(e) => setYearTo(e.target.value)}
+              placeholder="Ate"
+              inputMode="numeric"
+              className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-medium text-muted-foreground">
+            Tipo de Publicacao
+          </label>
+          <div className="grid grid-cols-1 gap-1.5 text-sm">
+            {PUBLICATION_TYPES.map((type) => (
+              <label key={type} className="flex items-center gap-2 text-foreground/90">
+                <input
+                  type="checkbox"
+                  checked={typeFilters[type]}
+                  onChange={() => toggleType(type)}
+                  className="h-3.5 w-3.5 accent-[var(--teal)]"
+                />
+                {type}
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-medium text-muted-foreground">
+            Mostrar resultados de
+          </label>
+          <div className="grid grid-cols-1 gap-1.5 text-sm">
+            {RESULT_KINDS.map((kind) => (
+              <label key={kind} className="flex items-center gap-2 text-foreground/90">
+                <input
+                  type="checkbox"
+                  checked={resultKinds[kind]}
+                  onChange={() => toggleResultKind(kind)}
+                  className="h-3.5 w-3.5 accent-[var(--teal)]"
+                />
+                {kind}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={handleApplyFilters}
+          className={`flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            filtersApplied
+              ? "bg-[var(--teal)] text-primary-foreground"
+              : "bg-primary text-primary-foreground hover:bg-primary/90"
+          }`}
+        >
+          {filtersApplied ? (
+            <>
+              <Check className="h-4 w-4" />
+              Aplicado
+            </>
+          ) : (
+            "Aplicar"
+          )}
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
@@ -163,25 +339,40 @@ function Home() {
           {hasQuery && (
             <div className="flex flex-1 items-center gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Buscar pesquisador, area ou publicacao"
-                  className="w-full rounded-full border border-border bg-input py-2 pl-10 pr-4 text-sm text-foreground focus:border-primary focus:outline-none"
+                  className="w-full rounded-full border border-border bg-input py-2 pl-4 pr-10 text-sm text-foreground focus:border-primary focus:outline-none"
                 />
+                <button
+                  onClick={handleSearch}
+                  aria-label="Buscar"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
               </div>
               <button
-                onClick={handleSearch}
-                className="rounded-md border border-border bg-secondary px-3 py-2 text-xs text-foreground hover:border-primary"
+                onClick={() => setShowFilters((value) => !value)}
+                aria-label="Filtros"
+                className={`shrink-0 rounded-full bg-primary p-2 text-primary-foreground transition-colors hover:bg-primary/90 ${
+                  showFilters ? "ring-2 ring-[var(--teal)] ring-offset-2 ring-offset-background" : ""
+                }`}
               >
-                Buscar
+                <SlidersHorizontal className="h-4 w-4" />
               </button>
             </div>
           )}
         </div>
       </header>
+
+      {hasQuery && showFilters && (
+        <div className="border-b border-border bg-sidebar/60 px-6 py-5">
+          <div className="mx-auto max-w-6xl">{filtersPanel}</div>
+        </div>
+      )}
 
       {!hasQuery ? (
         <section className="flex min-h-[calc(100vh-72px)] flex-col items-center justify-center px-6">
@@ -216,54 +407,7 @@ function Home() {
             </button>
           </div>
 
-          {showFilters && (
-            <div className="mt-6 w-full max-w-2xl rounded-xl border border-border bg-card p-5">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-xs font-medium text-muted-foreground">
-                    Intervalo de Anos
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      defaultValue="2018"
-                      placeholder="De"
-                      className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
-                    />
-                    <input
-                      defaultValue="2024"
-                      placeholder="Ate"
-                      className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="mb-2 block text-xs font-medium text-muted-foreground">
-                    Tipo de Publicacao
-                  </label>
-                  <div className="grid grid-cols-2 gap-1.5 text-sm">
-                    {["Paper", "Conference Paper", "Advising"].map((type) => (
-                      <label key={type} className="flex items-center gap-2 text-foreground/90">
-                        <input
-                          type="checkbox"
-                          defaultChecked
-                          className="h-3.5 w-3.5 accent-[var(--teal)]"
-                        />
-                        {type}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button
-                  onClick={handleSearch}
-                  className="rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  Aplicar
-                </button>
-              </div>
-            </div>
-          )}
+          {showFilters && <div className="mt-6 w-full max-w-2xl">{filtersPanel}</div>}
 
           {loading && <p className="mt-6 text-sm text-muted-foreground">Carregando dados do banco...</p>}
           {error && <p className="mt-6 max-w-xl text-center text-sm text-destructive">{error}</p>}
@@ -275,13 +419,13 @@ function Home() {
           </p>
           {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
-          {researcherResults.length > 0 && (
+          {visibleResearcherResults.length > 0 && (
             <>
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Pesquisadores
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {researcherResults.map((researcher) => {
+                {visibleResearcherResults.map((researcher) => {
                   const researcherAreas = uniqueAreas(areasByResearcher.get(researcher.id) ?? []);
                   return (
                     <button
@@ -322,13 +466,13 @@ function Home() {
             </>
           )}
 
-          {paperResults.length > 0 && (
+          {visiblePaperResults.length > 0 && (
             <div className="mt-8">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Publicacoes
               </h2>
               <div className="grid grid-cols-1 gap-4">
-                {paperResults.map(({ paper, score }) => (
+                {visiblePaperResults.map(({ paper, score }) => (
                   <button
                     key={paper.id}
                     onClick={() =>
