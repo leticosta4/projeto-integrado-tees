@@ -5,13 +5,17 @@ from flask import Flask, request
 from service.academic_formation import AcademicFormationService
 from service.advising import AdvisingService
 from service.conference_paper import ConferencePaperService
+from service.conference_paper_researcher import ConferencePaperResearcherService
 from service.paper import PaperService
+from service.paper_researcher import PaperResearcherService
 from service.research_area import ResearchAreaService
 from service.researcher import ResearcherService
 from routes.academic_formation import academic_formation_bp
 from routes.advising import advising_bp
 from routes.conference_paper import conference_paper_bp
+from routes.conference_paper_researcher import conference_paper_researcher_bp
 from routes.paper import paper_bp
+from routes.paper_researcher import paper_researcher_bp
 from routes.research_area import research_area_bp
 from routes.researcher import researcher_bp
 from routes.swagger import api_bp
@@ -70,9 +74,13 @@ def create_app():
 
     app.config['RESEARCHER_SERVICE'] = ResearcherService(pool)
     app.config['PAPER_SERVICE'] = PaperService(pool, embeddings_model)
+    app.config['PAPER_RESEARCHER_SERVICE'] = PaperResearcherService(pool)
     app.config['ACADEMIC_FORMATION_SERVICE'] = AcademicFormationService(pool)
     app.config['RESEARCH_AREA_SERVICE'] = ResearchAreaService(pool)
     app.config['CONFERENCE_PAPER_SERVICE'] = ConferencePaperService(pool)
+    app.config['CONFERENCE_PAPER_RESEARCHER_SERVICE'] = (
+        ConferencePaperResearcherService(pool)
+    )
     app.config['ADVISING_SERVICE'] = AdvisingService(pool)
 
     # Blueprints
@@ -80,9 +88,11 @@ def create_app():
     app.register_blueprint(api_bp)
     app.register_blueprint(researcher_bp)
     app.register_blueprint(paper_bp)
+    app.register_blueprint(paper_researcher_bp)
     app.register_blueprint(academic_formation_bp)
     app.register_blueprint(research_area_bp)
     app.register_blueprint(conference_paper_bp)
+    app.register_blueprint(conference_paper_researcher_bp)
     app.register_blueprint(advising_bp)
     
     return app
