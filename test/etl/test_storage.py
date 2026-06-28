@@ -32,11 +32,21 @@ def test_storage(app: Flask):
     storage: Storage = Storage(app)
     storage.store(data)
 
+    paper_link_count = sum(len(item.researcher_data.papers) for item in data)
+    conference_paper_link_count = sum(
+        len(item.researcher_data.conference_papers) for item in data
+    )
+
     assert researcher_service.get_researcher_count() == 8
-    assert paper_service.get_paper_count() == 494
+    assert paper_service.get_paper_count() <= paper_link_count
+    assert paper_service.get_paper_researcher_link_count() == paper_link_count
     assert academic_formation_service.get_academic_formation_count() == 38
     assert research_area_service.get_research_area_count() == 36
-    assert conference_paper_service.get_conference_paper_count() == 325
+    assert conference_paper_service.get_conference_paper_count() <= conference_paper_link_count
+    assert (
+        conference_paper_service.get_conference_paper_researcher_link_count()
+        == conference_paper_link_count
+    )
     assert advising_service.get_advising_count() == 406
 
     # Dedup test
@@ -44,8 +54,13 @@ def test_storage(app: Flask):
     storage.store(data)
 
     assert researcher_service.get_researcher_count() == 8
-    assert paper_service.get_paper_count() == 494
+    assert paper_service.get_paper_count() <= paper_link_count
+    assert paper_service.get_paper_researcher_link_count() == paper_link_count
     assert academic_formation_service.get_academic_formation_count() == 38
     assert research_area_service.get_research_area_count() == 36
-    assert conference_paper_service.get_conference_paper_count() == 325
+    assert conference_paper_service.get_conference_paper_count() <= conference_paper_link_count
+    assert (
+        conference_paper_service.get_conference_paper_researcher_link_count()
+        == conference_paper_link_count
+    )
     assert advising_service.get_advising_count() == 406

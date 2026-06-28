@@ -94,6 +94,10 @@ class PaperService:
         return self.repository.count()
 
 
+    def get_paper_researcher_link_count(self) -> int:
+        return self.repository.count_researcher_links()
+
+
     def get_paper_by_title(self, title: str) -> Paper | None:
         return self.repository.get_by_title(title)
 
@@ -104,9 +108,9 @@ class PaperService:
         limit: int = 10,
     ) -> list[tuple[Paper, float]]:
         embedding = self.embeddings_model.embed_query(query)
-        
+
         return self.repository.search(query, embedding, limit)
-    
+
 
     def list_all(self, filters: dict[str, object] | None = None) -> list[Paper]:
         return self.repository.list_all(filters)
@@ -122,4 +126,4 @@ class PaperService:
 
     def remove_by_id(self, paper_id: int) -> int:
         return self.repository.remove_by_id(paper_id)
-    
+
