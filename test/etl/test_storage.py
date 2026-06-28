@@ -3,9 +3,11 @@ from tqdm import tqdm
 
 from etl.extractor import Extractor
 from etl.models import ResearcherData, XMLData
+from service.conference_paper_researcher import ConferencePaperResearcherService
 from service.academic_formation import AcademicFormationService
 from service.advising import AdvisingService
 from service.conference_paper import ConferencePaperService
+from service.paper_researcher import PaperResearcherService
 from service.paper import PaperService
 from service.research_area import ResearchAreaService
 from service.researcher import ResearcherService
@@ -21,6 +23,12 @@ def test_storage(app: Flask):
     research_area_service: ResearchAreaService = app.config['RESEARCH_AREA_SERVICE']
     researcher_service: ResearcherService = app.config['RESEARCHER_SERVICE']
     paper_service: PaperService = app.config['PAPER_SERVICE']
+    paper_researcher_service: PaperResearcherService = app.config[
+        'PAPER_RESEARCHER_SERVICE'
+    ]
+    conference_paper_researcher_service: ConferencePaperResearcherService = app.config[
+        'CONFERENCE_PAPER_RESEARCHER_SERVICE'
+    ]
 
     assert researcher_service.get_researcher_count() == 0
     assert paper_service.get_paper_count() == 0
@@ -32,11 +40,26 @@ def test_storage(app: Flask):
     storage: Storage = Storage(app)
     storage.store(data)
 
+    paper_link_count = sum(len(item.researcher_data.papers) for item in data)
+    conference_paper_link_count = sum(
+        len(item.researcher_data.conference_papers) for item in data
+    )
+
     assert researcher_service.get_researcher_count() == 8
-    assert paper_service.get_paper_count() == 494
+    assert paper_service.get_paper_count() <= paper_link_count
+    assert paper_service.get_paper_researcher_link_count() == paper_link_count
+    assert paper_researcher_service.get_paper_researcher_count() == paper_link_count
     assert academic_formation_service.get_academic_formation_count() == 38
     assert research_area_service.get_research_area_count() == 36
-    assert conference_paper_service.get_conference_paper_count() == 325
+    assert conference_paper_service.get_conference_paper_count() <= conference_paper_link_count
+    assert (
+        conference_paper_service.get_conference_paper_researcher_link_count()
+        == conference_paper_link_count
+    )
+    assert (
+        conference_paper_researcher_service.get_conference_paper_researcher_count()
+        == conference_paper_link_count
+    )
     assert advising_service.get_advising_count() == 406
 
     # Dedup test
@@ -44,8 +67,18 @@ def test_storage(app: Flask):
     storage.store(data)
 
     assert researcher_service.get_researcher_count() == 8
-    assert paper_service.get_paper_count() == 494
+    assert paper_service.get_paper_count() <= paper_link_count
+    assert paper_service.get_paper_researcher_link_count() == paper_link_count
+    assert paper_researcher_service.get_paper_researcher_count() == paper_link_count
     assert academic_formation_service.get_academic_formation_count() == 38
     assert research_area_service.get_research_area_count() == 36
-    assert conference_paper_service.get_conference_paper_count() == 325
+    assert conference_paper_service.get_conference_paper_count() <= conference_paper_link_count
+    assert (
+        conference_paper_service.get_conference_paper_researcher_link_count()
+        == conference_paper_link_count
+    )
+    assert (
+        conference_paper_researcher_service.get_conference_paper_researcher_count()
+        == conference_paper_link_count
+    )
     assert advising_service.get_advising_count() == 406

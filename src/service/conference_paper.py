@@ -53,6 +53,10 @@ class ConferencePaperService:
         return self.repository.count()
 
 
+    def get_conference_paper_researcher_link_count(self) -> int:
+        return self.repository.count_researcher_links()
+
+
     def get_conference_papers_by_researcher_id(
         self, researcher_id: int
     ) -> list[ConferencePaper]:
@@ -77,4 +81,4 @@ class ConferencePaperService:
 
     def remove_by_id(self, conference_paper_id: int) -> int:
         return self.repository.remove_by_id(conference_paper_id)
-    
+
