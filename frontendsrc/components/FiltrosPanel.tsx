@@ -4,6 +4,12 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Download, Menu } from "lucide-rea
 const PUB_TYPES = ["Paper", "Conference Paper", "Advising"] as const;
 const DEFAULT_AREA_OPTIONS = ["Todas as Areas"] as const;
 
+const PUB_TYPE_LABELS: Record<(typeof PUB_TYPES)[number], string> = {
+  Paper: "Artigo de periodico",
+  "Conference Paper": "Trabalho em evento",
+  Advising: "Orientacao",
+};
+
 export function FiltrosPanel({
   showExport = false,
   isOpen = true,
@@ -114,7 +120,7 @@ export function FiltrosPanel({
                 onChange={() => toggleType(type)}
                 className="h-3.5 w-3.5 accent-[var(--teal)]"
               />
-              {type}
+              {PUB_TYPE_LABELS[type]}
             </label>
           ))}
         </div>

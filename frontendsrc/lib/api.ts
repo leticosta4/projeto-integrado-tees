@@ -76,6 +76,24 @@ export type SearchResult = {
   score: number;
 };
 
+export type UnifiedSearchResult = {
+  result_type: "paper" | "conference_paper" | "advising" | "researcher";
+  id: number;
+  title: string;
+  year?: number | null;
+  researcher_id?: number | null;
+  primary_researcher?: Pick<Researcher, "id" | "full_name"> | null;
+  authors: Pick<Researcher, "id" | "full_name">[];
+  areas: Array<{
+    major_area?: string | null;
+    area?: string | null;
+    sub_area?: string | null;
+    specialty?: string | null;
+  }>;
+  metadata: Record<string, string | number | boolean | null>;
+  score: number;
+};
+
 type RawSearchResult = {
   paper: Paper;
   score: number | string | null;
@@ -171,4 +189,38 @@ export async function searchPapers(query: string, limit = 10) {
       .slice(0, limit)
       .map((paper, index) => ({ paper, score: 1 / (index + 1) }));
   }
+}
+
+export function searchAll(
+  query: string,
+  options?: {
+    limit?: number;
+    types?: string[];
+    resultKinds?: string[];
+    yearFrom?: string | number;
+    yearTo?: string | number;
+    area?: string;
+    researcherId?: string | number;
+  },
+) {
+  return apiFetch<UnifiedSearchResult[]>("/search", {
+    q: query,
+    limit: options?.limit ?? 10,
+    types:
+      options?.types === undefined
+        ? undefined
+        : options.types.length > 0
+          ? options.types.join(",")
+          : "__none__",
+    result_kinds:
+      options?.resultKinds === undefined
+        ? undefined
+        : options.resultKinds.length > 0
+          ? options.resultKinds.join(",")
+          : "__none__",
+    year_from: options?.yearFrom,
+    year_to: options?.yearTo,
+    area: options?.area,
+    researcher_id: options?.researcherId,
+  });
 }

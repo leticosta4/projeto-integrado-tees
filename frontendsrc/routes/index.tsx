@@ -2,18 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Check, FileText, Search, SlidersHorizontal, User } from "lucide-react";
 import {
-  listAdvisings,
-  listConferencePapers,
   listPapers,
   listResearchAreas,
-  listResearchers,
-  searchPapers,
-  type Advising,
-  type ConferencePaper,
+  searchAll,
   type Paper,
   type ResearchArea,
-  type Researcher,
-  type SearchResult,
+  type UnifiedSearchResult,
 } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
@@ -32,9 +26,16 @@ type PublicationType = (typeof PUBLICATION_TYPES)[number];
 const RESULT_KINDS = ["Pesquisadores", "Publicacoes"] as const;
 type ResultKind = (typeof RESULT_KINDS)[number];
 
-function normalize(value: string | null | undefined) {
-  return (value ?? "").toLowerCase();
-}
+const PUBLICATION_TYPE_LABELS: Record<PublicationType, string> = {
+  Paper: "Artigo de periodico",
+  "Conference Paper": "Trabalho em evento",
+  Advising: "Orientacao",
+};
+
+const RESULT_KIND_LABELS: Record<ResultKind, string> = {
+  Pesquisadores: "Pesquisadores",
+  Publicacoes: "Publicacoes",
+};
 
 function uniqueAreas(areas: ResearchArea[]) {
   return Array.from(
@@ -46,16 +47,33 @@ function uniqueAreas(areas: ResearchArea[]) {
   );
 }
 
+function resultTypeLabel(type: UnifiedSearchResult["result_type"]) {
+  if (type === "paper") return "Artigo de periodico";
+  if (type === "conference_paper") return "Trabalho em evento";
+  if (type === "advising") return "Orientacao";
+  return "Pesquisador";
+}
+
+function resultSecondary(result: UnifiedSearchResult) {
+  if (result.result_type === "paper") {
+    return result.metadata.journal ?? result.metadata.doi ?? "";
+  }
+  if (result.result_type === "conference_paper") {
+    return result.metadata.event_name ?? result.metadata.doi ?? "";
+  }
+  if (result.result_type === "advising") {
+    return result.metadata.advisee_name ?? result.metadata.level ?? "";
+  }
+  return result.primary_researcher?.full_name ?? "";
+}
+
 function Home() {
   const [query, setQuery] = useState("");
   const [committedQuery, setCommittedQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [researchers, setResearchers] = useState<Researcher[]>([]);
   const [papers, setPapers] = useState<Paper[]>([]);
-  const [conferencePapers, setConferencePapers] = useState<ConferencePaper[]>([]);
-  const [advisings, setAdvisings] = useState<Advising[]>([]);
   const [areas, setAreas] = useState<ResearchArea[]>([]);
-  const [paperResults, setPaperResults] = useState<SearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<UnifiedSearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,13 +83,14 @@ function Home() {
 
   const [yearFrom, setYearFrom] = useState("");
   const [yearTo, setYearTo] = useState("");
+  const [selectedArea, setSelectedArea] = useState("");
   const [typeFilters, setTypeFilters] = useState<Record<PublicationType, boolean>>({
     Paper: true,
     "Conference Paper": true,
     Advising: true,
   });
   const [resultKinds, setResultKinds] = useState<Record<ResultKind, boolean>>({
-    Pesquisadores: true,
+    Pesquisadores: false,
     Publicacoes: true,
   });
   const [filtersApplied, setFiltersApplied] = useState(false);
@@ -82,20 +101,14 @@ function Home() {
     async function loadInitialData() {
       try {
         setLoading(true);
-        const [researcherData, paperData, areaData, conferenceData, advisingData] = await Promise.all([
-          listResearchers(),
+        const [paperData, areaData] = await Promise.all([
           listPapers(),
           listResearchAreas(),
-          listConferencePapers(),
-          listAdvisings(),
         ]);
 
         if (!active) return;
-        setResearchers(researcherData);
         setPapers(paperData);
         setAreas(areaData);
-        setConferencePapers(conferenceData);
-        setAdvisings(advisingData);
         setError(null);
       } catch (err) {
         if (!active) return;
@@ -114,19 +127,35 @@ function Home() {
   useEffect(() => {
     let active = true;
 
-    async function runPaperSearch() {
+    async function runSearch() {
       if (!hasQuery) {
-        setPaperResults([]);
+        setSearchResults([]);
         return;
       }
 
       try {
         setSearching(true);
-        const results = await searchPapers(committedQuery, 8);
-        if (active) setPaperResults(results);
+        const selectedTypes = PUBLICATION_TYPES
+          .filter((type) => typeFilters[type])
+          .map((type) => {
+            if (type === "Conference Paper") return "conference_paper";
+            return type.toLowerCase();
+          });
+        const selectedResultKinds = RESULT_KINDS
+          .filter((kind) => resultKinds[kind])
+          .map((kind) => (kind === "Pesquisadores" ? "researchers" : "publications"));
+        const results = await searchAll(committedQuery, {
+          limit: 40,
+          types: selectedTypes,
+          resultKinds: selectedResultKinds,
+          yearFrom,
+          yearTo,
+          area: selectedArea,
+        });
+        if (active) setSearchResults(results);
       } catch (err) {
         if (active) {
-          setPaperResults([]);
+          setSearchResults([]);
           setError(err instanceof Error ? err.message : "Erro ao buscar publicacoes.");
         }
       } finally {
@@ -134,11 +163,11 @@ function Home() {
       }
     }
 
-    runPaperSearch();
+    runSearch();
     return () => {
       active = false;
     };
-  }, [committedQuery, hasQuery]);
+  }, [committedQuery, hasQuery, resultKinds, selectedArea, typeFilters, yearFrom, yearTo]);
 
   const papersByResearcher = useMemo(() => {
     const counts = new Map<number, number>();
@@ -148,80 +177,22 @@ function Home() {
     return counts;
   }, [papers]);
 
-  const areasByResearcher = useMemo(() => {
-    const grouped = new Map<number, ResearchArea[]>();
-    for (const area of areas) {
-      const current = grouped.get(area.researcher_id) ?? [];
-      current.push(area);
-      grouped.set(area.researcher_id, current);
-    }
-    return grouped;
+  const areaOptions = useMemo(() => {
+    return uniqueAreas(areas).sort((a, b) => a.localeCompare(b));
   }, [areas]);
 
  
-  const isWithinYearRange = useMemo(() => {
-    const fromYear = yearFrom.trim() ? Number(yearFrom) : null;
-    const toYear = yearTo.trim() ? Number(yearTo) : null;
-    return (year: number | null | undefined) => {
-      if (year == null) return true;
-      if (fromYear != null && year < fromYear) return false;
-      if (toYear != null && year > toYear) return false;
-      return true;
-    };
-  }, [yearFrom, yearTo]);
-
-  const eligibleResearcherIds = useMemo(() => {
-    const ids = new Set<number>();
-
-    if (typeFilters.Paper) {
-      for (const paper of papers) {
-        if (isWithinYearRange(paper.year)) ids.add(paper.researcher_id);
-      }
-    }
-
-    if (typeFilters["Conference Paper"]) {
-      for (const conferencePaper of conferencePapers) {
-        if (isWithinYearRange(conferencePaper.year)) ids.add(conferencePaper.researcher_id);
-      }
-    }
-
-    if (typeFilters.Advising) {
-      for (const advising of advisings) {
-        ids.add(advising.researcher_id);
-      }
-    }
-
-    return ids;
-  }, [papers, conferencePapers, advisings, typeFilters, isWithinYearRange]);
-
-  const researcherResults = useMemo(() => {
-    if (!hasQuery) return [];
-    const lowered = normalize(committedQuery);
-
-    return researchers.filter((researcher) => {
-      if (!eligibleResearcherIds.has(researcher.id)) return false;
-
-      const researcherAreas = uniqueAreas(areasByResearcher.get(researcher.id) ?? []);
-      return (
-        normalize(researcher.full_name).includes(lowered) ||
-        normalize(researcher.citation_name).includes(lowered) ||
-        normalize(researcher.lattes_id).includes(lowered) ||
-        researcherAreas.some((area) => normalize(area).includes(lowered))
-      );
-    });
-  }, [areasByResearcher, committedQuery, eligibleResearcherIds, hasQuery, researchers]);
-
-
-  const filteredPaperResults = useMemo(() => {
-    if (!typeFilters.Paper) return [];
-    return paperResults.filter(({ paper }) => isWithinYearRange(paper.year));
-  }, [paperResults, typeFilters, isWithinYearRange]);
-
   const showResearchers = resultKinds.Pesquisadores;
   const showPublications = resultKinds.Publicacoes;
 
-  const visibleResearcherResults = showResearchers ? researcherResults : [];
-  const visiblePaperResults = showPublications ? filteredPaperResults : [];
+  const visibleResearcherResults = showResearchers
+    ? searchResults.filter((result) => result.result_type === "researcher")
+    : [];
+  const visiblePublicationResults = showPublications
+    ? searchResults.filter((result) =>
+        ["paper", "conference_paper", "advising"].includes(result.result_type),
+      )
+    : [];
 
   const handleSearch = () => {
     setCommittedQuery(query.trim());
@@ -232,11 +203,15 @@ function Home() {
   };
 
   const toggleType = (type: PublicationType) => {
+    if (!resultKinds.Publicacoes) return;
     setTypeFilters((current) => ({ ...current, [type]: !current[type] }));
   };
 
   const toggleResultKind = (kind: ResultKind) => {
-    setResultKinds((current) => ({ ...current, [kind]: !current[kind] }));
+    setResultKinds({
+      Pesquisadores: kind === "Pesquisadores",
+      Publicacoes: kind === "Publicacoes",
+    });
   };
 
   const handleApplyFilters = () => {
@@ -244,11 +219,13 @@ function Home() {
     setTimeout(() => setFiltersApplied(false), 1500);
   };
 
-  const totalResults = visibleResearcherResults.length + visiblePaperResults.length;
+  const totalResults =
+    visibleResearcherResults.length +
+    visiblePublicationResults.length;
 
   const filtersPanel = (
     <div className="rounded-xl border border-border bg-card p-5">
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <div>
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
             Intervalo de Anos
@@ -274,16 +251,21 @@ function Home() {
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
             Tipo de Publicacao
           </label>
-          <div className="grid grid-cols-1 gap-1.5 text-sm">
+          <div
+            className={`grid grid-cols-1 gap-1.5 text-sm transition-opacity ${
+              resultKinds.Publicacoes ? "" : "opacity-45"
+            }`}
+          >
             {PUBLICATION_TYPES.map((type) => (
               <label key={type} className="flex items-center gap-2 text-foreground/90">
                 <input
                   type="checkbox"
                   checked={typeFilters[type]}
                   onChange={() => toggleType(type)}
+                  disabled={!resultKinds.Publicacoes}
                   className="h-3.5 w-3.5 accent-[var(--teal)]"
                 />
-                {type}
+                {PUBLICATION_TYPE_LABELS[type]}
               </label>
             ))}
           </div>
@@ -296,15 +278,33 @@ function Home() {
             {RESULT_KINDS.map((kind) => (
               <label key={kind} className="flex items-center gap-2 text-foreground/90">
                 <input
-                  type="checkbox"
+                  type="radio"
+                  name="result-kind"
                   checked={resultKinds[kind]}
                   onChange={() => toggleResultKind(kind)}
                   className="h-3.5 w-3.5 accent-[var(--teal)]"
                 />
-                {kind}
+                {RESULT_KIND_LABELS[kind]}
               </label>
             ))}
           </div>
+        </div>
+        <div>
+          <label className="mb-2 block text-xs font-medium text-muted-foreground">
+            Area de Pesquisa
+          </label>
+          <select
+            value={selectedArea}
+            onChange={(e) => setSelectedArea(e.target.value)}
+            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+          >
+            <option value="">Todas as areas</option>
+            {areaOptions.map((area) => (
+              <option key={area} value={area}>
+                {area}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="mt-4 flex justify-end">
@@ -425,13 +425,16 @@ function Home() {
                 Pesquisadores
               </h2>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {visibleResearcherResults.map((researcher) => {
-                  const researcherAreas = uniqueAreas(areasByResearcher.get(researcher.id) ?? []);
+                {visibleResearcherResults.map((result) => {
+                  const researcherId = result.researcher_id ?? result.id;
+                  const researcherAreas = result.areas
+                    .flatMap((area) => [area.major_area, area.area, area.sub_area, area.specialty])
+                    .filter((value): value is string => Boolean(value));
                   return (
                     <button
-                      key={researcher.id}
+                      key={`${result.result_type}-${result.id}`}
                       onClick={() =>
-                        navigate({ to: "/pesquisador/$id", params: { id: String(researcher.id) } })
+                        navigate({ to: "/pesquisador/$id", params: { id: String(researcherId) } })
                       }
                       className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--teal)]"
                     >
@@ -440,10 +443,12 @@ function Home() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-foreground group-hover:text-primary">
-                          {researcher.full_name}
+                          {result.title}
                         </h3>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          ID Lattes: {researcher.lattes_id}
+                          {result.metadata.lattes_id
+                            ? `ID Lattes: ${result.metadata.lattes_id}`
+                            : resultTypeLabel(result.result_type)}
                         </p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {researcherAreas.slice(0, 3).map((area) => (
@@ -456,7 +461,7 @@ function Home() {
                           ))}
                         </div>
                         <p className="mt-3 text-xs font-medium text-foreground">
-                          {papersByResearcher.get(researcher.id) ?? 0} publicacoes
+                          {papersByResearcher.get(researcherId) ?? 0} publicacoes
                         </p>
                       </div>
                     </button>
@@ -466,18 +471,27 @@ function Home() {
             </>
           )}
 
-          {visiblePaperResults.length > 0 && (
+          {visiblePublicationResults.length > 0 && (
             <div className="mt-8">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Publicacoes
               </h2>
               <div className="grid grid-cols-1 gap-4">
-                {visiblePaperResults.map(({ paper, score }) => (
+                {visiblePublicationResults.map((result) => (
                   <button
-                    key={paper.id}
-                    onClick={() =>
-                      navigate({ to: "/publicacao/paper/$id", params: { id: String(paper.id) } })
-                    }
+                    key={`${result.result_type}-${result.id}`}
+                    onClick={() => {
+                      if (result.result_type === "paper") {
+                        navigate({ to: "/publicacao/paper/$id", params: { id: String(result.id) } });
+                      } else if (result.result_type === "conference_paper") {
+                        navigate({
+                          to: "/publicacao/conference-paper/$id",
+                          params: { id: String(result.id) },
+                        });
+                      } else {
+                        navigate({ to: "/publicacao/advising/$id", params: { id: String(result.id) } });
+                      }
+                    }}
                     className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--teal)]"
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
@@ -485,10 +499,14 @@ function Home() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-foreground group-hover:text-primary">
-                        {paper.title}
+                        {result.title}
                       </h3>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {paper.year ?? "Ano nao informado"} - score {score.toFixed(4)}
+                        {resultTypeLabel(result.result_type)} - {result.year ?? "Ano nao informado"} - score{" "}
+                        {Number(result.score ?? 0).toFixed(4)}
+                      </p>
+                      <p className="mt-1 text-xs text-primary">
+                        {String(resultSecondary(result) || result.primary_researcher?.full_name || "")}
                       </p>
                     </div>
                   </button>
