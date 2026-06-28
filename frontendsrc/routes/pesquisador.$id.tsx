@@ -1,11 +1,15 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { BarChart3, Download, User } from "lucide-react";
 import { FiltrosPanel } from "@/components/FiltrosPanel";
 import {
   getResearcher,
+  listAdvisings,
+  listConferencePapers,
   listPapers,
   listResearchAreas,
+  type Advising,
+  type ConferencePaper,
   type Paper,
   type ResearchArea,
   type Researcher,
@@ -17,12 +21,14 @@ export const Route = createFileRoute("/pesquisador/$id")({
   }),
   loader: async ({ params }) => {
     try {
-      const [researcher, papers, areas] = await Promise.all([
+      const [researcher, papers, areas, conferencePapers, advisings] = await Promise.all([
         getResearcher(params.id),
         listPapers({ researcher_id: params.id }),
         listResearchAreas({ researcher_id: params.id }),
+        listConferencePapers({ researcher_id: params.id }),
+        listAdvisings({ researcher_id: params.id }),
       ]);
-      return { researcher, papers, areas };
+      return { researcher, papers, areas, conferencePapers, advisings };
     } catch {
       throw notFound();
     }
@@ -57,13 +63,56 @@ function researcherDescription(researcher: Researcher) {
     : "Pesquisador importado a partir dos dados do Curriculo Lattes.";
 }
 
+type PublicationItem =
+  | { kind: "paper"; data: Paper }
+  | { kind: "conference-paper"; data: ConferencePaper }
+  | { kind: "advising"; data: Advising };
+
+function publicationLabel(kind: PublicationItem["kind"]) {
+  if (kind === "paper") return "Paper";
+  if (kind === "conference-paper") return "Conference Paper";
+  return "Orientacao";
+}
+
+function publicationSecondary(item: PublicationItem): string {
+  if (item.kind === "paper") return item.data.journal ?? item.data.nature ?? "";
+  if (item.kind === "conference-paper") return item.data.event_name ?? item.data.nature ?? "";
+  return item.data.advising_type ?? item.data.level ?? "";
+}
+
+function navigateToPublication(
+  navigate: ReturnType<typeof useNavigate>,
+  item: PublicationItem,
+) {
+  if (item.kind === "paper") {
+    navigate({ to: "/publicacao/paper/$id", params: { id: String(item.data.id) } });
+  } else if (item.kind === "conference-paper") {
+    navigate({ to: "/publicacao/conference-paper/$id", params: { id: String(item.data.id) } });
+  } else {
+    navigate({ to: "/publicacao/advising/$id", params: { id: String(item.data.id) } });
+  }
+}
+
 function ResearcherProfile() {
-  const { researcher, papers, areas } = Route.useLoaderData() as {
+  const { researcher, papers, areas, conferencePapers, advisings } = Route.useLoaderData() as {
     researcher: Researcher;
     papers: Paper[];
     areas: ResearchArea[];
+    conferencePapers: ConferencePaper[];
+    advisings: Advising[];
   };
   const [filtersOpen, setFiltersOpen] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(20);
+  const navigate = useNavigate();
+
+  const allPublications: PublicationItem[] = [
+    ...papers.map((data) => ({ kind: "paper" as const, data })),
+    ...conferencePapers.map((data) => ({ kind: "conference-paper" as const, data })),
+    ...advisings.map((data) => ({ kind: "advising" as const, data })),
+  ].sort((a, b) => (b.data.year ?? 0) - (a.data.year ?? 0));
+
+  const totalPublications = allPublications.length;
+  const visiblePublications = allPublications.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,9 +143,22 @@ function ResearcherProfile() {
 
         <section className="mt-6">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Publicacoes
+            Producoes
           </h2>
-          <p className="mt-1 font-serif text-5xl text-foreground">{papers.length}</p>
+          <div className="mt-2 flex gap-6">
+            <div>
+              <p className="font-serif text-4xl text-foreground">{papers.length}</p>
+              <p className="text-xs text-muted-foreground">Papers</p>
+            </div>
+            <div>
+              <p className="font-serif text-4xl text-foreground">{conferencePapers.length}</p>
+              <p className="text-xs text-muted-foreground">Conference Papers</p>
+            </div>
+            <div>
+              <p className="font-serif text-4xl text-foreground">{advisings.length}</p>
+              <p className="text-xs text-muted-foreground">Orientacoes</p>
+            </div>
+          </div>
         </section>
 
         <section className="mt-6">
@@ -127,27 +189,34 @@ function ResearcherProfile() {
             </button>
           </div>
           <div className="divide-y divide-border">
-            {papers.slice(0, 20).map((paper) => (
-              <div key={paper.id} className="flex items-center gap-4 py-3 text-sm">
+            {visiblePublications.map((item) => (
+              <button
+                key={`${item.kind}-${item.data.id}`}
+                onClick={() => navigateToPublication(navigate, item)}
+                className="flex w-full items-center gap-4 py-3 text-left text-sm transition-colors hover:bg-primary/5"
+              >
                 <span className="w-12 shrink-0 text-muted-foreground">
-                  {paper.year ?? "-"}
+                  {item.data.year ?? "-"}
                 </span>
-                <span className="w-24 shrink-0 rounded bg-secondary px-2 py-0.5 text-center text-xs text-foreground">
-                  Paper
+                <span className="w-32 shrink-0 rounded bg-secondary px-2 py-0.5 text-center text-xs text-foreground">
+                  {publicationLabel(item.kind)}
                 </span>
-                <span className="flex-1 text-foreground/90">{paper.title}</span>
-                <span className="text-xs text-primary">{paper.journal ?? paper.nature ?? ""}</span>
-              </div>
+                <span className="flex-1 text-foreground/90">{item.data.title}</span>
+                <span className="text-xs text-primary">{publicationSecondary(item)}</span>
+              </button>
             ))}
-            {papers.length === 0 && (
+            {totalPublications === 0 && (
               <p className="py-6 text-sm text-muted-foreground">
                 Nenhuma publicacao cadastrada para este pesquisador.
               </p>
             )}
           </div>
-          {papers.length > 20 && (
-            <button className="mt-4 text-xs text-muted-foreground hover:text-primary">
-              Exibindo 20 de {papers.length} itens
+          {visibleCount < totalPublications && (
+            <button
+              onClick={() => setVisibleCount((c) => c + 20)}
+              className="mt-4 text-xs text-muted-foreground hover:text-primary"
+            >
+              Exibindo {visibleCount} de {totalPublications} itens — carregar mais
             </button>
           )}
         </section>

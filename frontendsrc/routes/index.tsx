@@ -476,7 +476,7 @@ function Home() {
                   <button
                     key={paper.id}
                     onClick={() =>
-                      navigate({ to: "/pesquisador/$id", params: { id: String(paper.researcher_id) } })
+                      navigate({ to: "/publicacao/paper/$id", params: { id: String(paper.id) } })
                     }
                     className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--teal)]"
                   >

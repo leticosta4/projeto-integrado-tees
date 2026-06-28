@@ -132,6 +132,10 @@ export function listPapers(query?: Record<string, QueryValue>) {
   return apiFetch<Paper[]>("/papers", query);
 }
 
+export function getPaper(id: string | number) {
+  return apiFetch<Paper>(`/papers/${id}`);
+}
+
 export function listResearchAreas(query?: Record<string, QueryValue>) {
   return apiFetch<ResearchArea[]>("/research-areas", query);
 }
@@ -140,8 +144,16 @@ export function listConferencePapers(query?: Record<string, QueryValue>) {
   return apiFetch<ConferencePaper[]>("/conference-papers", query);
 }
 
+export function getConferencePaper(id: string | number) {
+  return apiFetch<ConferencePaper>(`/conference-papers/${id}`);
+}
+
 export function listAdvisings(query?: Record<string, QueryValue>) {
   return apiFetch<Advising[]>("/advisings", query);
+}
+
+export function getAdvising(id: string | number) {
+  return apiFetch<Advising>(`/advisings/${id}`);
 }
 
 export async function searchPapers(query: string, limit = 10) {

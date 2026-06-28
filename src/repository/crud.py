@@ -1,5 +1,6 @@
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from types import UnionType
+from typing import Any, TypeVar, Union, get_args, get_origin
 
 from psycopg import sql
 from psycopg.rows import class_row
@@ -7,6 +8,38 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
+
+
+def _unwrap_optional(annotation: Any) -> Any:
+    if get_origin(annotation) in (Union, UnionType):
+        non_none_args = [arg for arg in get_args(annotation) if arg is not type(None)]
+        if len(non_none_args) == 1:
+            return non_none_args[0]
+    return annotation
+
+
+def _coerce_filter_value(
+    model: type[BaseModel],
+    field: str,
+    value: Any,
+) -> tuple[Any, bool]:
+    field_info = model.model_fields.get(field)
+    field_type = _unwrap_optional(field_info.annotation) if field_info else None
+
+    if field_type is bool:
+        if isinstance(value, bool):
+            return value, True
+        normalized = str(value).strip().lower()
+        if normalized in ("true", "1", "t", "yes"):
+            return True, True
+        if normalized in ("false", "0", "f", "no"):
+            return False, True
+        raise ValueError(f"Invalid boolean value for filter '{field}': {value!r}")
+
+    if field_type in (int, float):
+        return field_type(value), True
+
+    return value, False
 
 
 def list_all(
@@ -24,12 +57,17 @@ def list_all(
         if field not in allowed_filters or value is None or value == "":
             continue
 
-        if isinstance(value, str):
-            conditions.append(sql.SQL("{} ILIKE %s").format(sql.Identifier(field)))
-            values.append(f"%{value}%")
-        else:
+        try:
+            coerced_value, exact_match = _coerce_filter_value(model, field, value)
+        except (TypeError, ValueError):
+            continue
+
+        if exact_match:
             conditions.append(sql.SQL("{} = %s").format(sql.Identifier(field)))
-            values.append(value)
+            values.append(coerced_value)
+        else:
+            conditions.append(sql.SQL("{} ILIKE %s").format(sql.Identifier(field)))
+            values.append(f"%{coerced_value}%")
 
     where_clause = (
         sql.SQL("WHERE ") + sql.SQL(" AND ").join(conditions)
@@ -51,8 +89,8 @@ def list_all(
         with conn.cursor(row_factory=class_row(model)) as cur:
             _ = cur.execute(query, values)
             return cur.fetchall()
-        
-    
+
+
 def get_by_id(
     pool: ConnectionPool,
     table: str,
@@ -127,4 +165,3 @@ def remove_by_id(pool: ConnectionPool, table: str, item_id: int) -> int:
         with conn.cursor() as cur:
             _ = cur.execute(query, (item_id,))
             return cur.rowcount
-        
