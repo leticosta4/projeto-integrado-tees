@@ -1,6 +1,6 @@
 import re
 import unicodedata
-from typing import Any
+from typing import Any, LiteralString, cast
 
 from psycopg_pool import ConnectionPool
 
@@ -110,7 +110,10 @@ class SearchRepository:
 
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
-                _ = cur.execute(sql, values)
+                _ = cur.execute(cast(LiteralString, sql), tuple(values))
+                if cur.description is None:
+                    return []
+
                 columns = [column.name for column in cur.description]
                 return [
                     dict(zip(columns, row))
