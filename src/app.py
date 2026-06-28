@@ -10,6 +10,7 @@ from service.paper import PaperService
 from service.paper_researcher import PaperResearcherService
 from service.research_area import ResearchAreaService
 from service.researcher import ResearcherService
+from service.search import SearchService
 from routes.academic_formation import academic_formation_bp
 from routes.advising import advising_bp
 from routes.conference_paper import conference_paper_bp
@@ -18,6 +19,7 @@ from routes.paper import paper_bp
 from routes.paper_researcher import paper_researcher_bp
 from routes.research_area import research_area_bp
 from routes.researcher import researcher_bp
+from routes.search import search_bp
 from routes.swagger import api_bp
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
@@ -73,6 +75,7 @@ def create_app():
         )
 
     app.config['RESEARCHER_SERVICE'] = ResearcherService(pool)
+    app.config['SEARCH_SERVICE'] = SearchService(pool)
     app.config['PAPER_SERVICE'] = PaperService(pool, embeddings_model)
     app.config['PAPER_RESEARCHER_SERVICE'] = PaperResearcherService(pool)
     app.config['ACADEMIC_FORMATION_SERVICE'] = AcademicFormationService(pool)
@@ -86,6 +89,7 @@ def create_app():
     # Blueprints
 
     app.register_blueprint(api_bp)
+    app.register_blueprint(search_bp)
     app.register_blueprint(researcher_bp)
     app.register_blueprint(paper_bp)
     app.register_blueprint(paper_researcher_bp)
