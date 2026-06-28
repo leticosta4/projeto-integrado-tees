@@ -51,7 +51,6 @@ function resultTypeLabel(type: UnifiedSearchResult["result_type"]) {
   if (type === "paper") return "Artigo de periodico";
   if (type === "conference_paper") return "Trabalho em evento";
   if (type === "advising") return "Orientacao";
-  if (type === "research_area") return "Area";
   return "Pesquisador";
 }
 
@@ -91,7 +90,7 @@ function Home() {
     Advising: true,
   });
   const [resultKinds, setResultKinds] = useState<Record<ResultKind, boolean>>({
-    Pesquisadores: true,
+    Pesquisadores: false,
     Publicacoes: true,
   });
   const [filtersApplied, setFiltersApplied] = useState(false);
@@ -146,7 +145,7 @@ function Home() {
           .filter((kind) => resultKinds[kind])
           .map((kind) => (kind === "Pesquisadores" ? "researchers" : "publications"));
         const results = await searchAll(committedQuery, {
-          limit: 8,
+          limit: 40,
           types: selectedTypes,
           resultKinds: selectedResultKinds,
           yearFrom,
@@ -189,9 +188,6 @@ function Home() {
   const visibleResearcherResults = showResearchers
     ? searchResults.filter((result) => result.result_type === "researcher")
     : [];
-  const visibleAreaResults = showResearchers
-    ? searchResults.filter((result) => result.result_type === "research_area")
-    : [];
   const visiblePublicationResults = showPublications
     ? searchResults.filter((result) =>
         ["paper", "conference_paper", "advising"].includes(result.result_type),
@@ -207,11 +203,15 @@ function Home() {
   };
 
   const toggleType = (type: PublicationType) => {
+    if (!resultKinds.Publicacoes) return;
     setTypeFilters((current) => ({ ...current, [type]: !current[type] }));
   };
 
   const toggleResultKind = (kind: ResultKind) => {
-    setResultKinds((current) => ({ ...current, [kind]: !current[kind] }));
+    setResultKinds({
+      Pesquisadores: kind === "Pesquisadores",
+      Publicacoes: kind === "Publicacoes",
+    });
   };
 
   const handleApplyFilters = () => {
@@ -221,7 +221,6 @@ function Home() {
 
   const totalResults =
     visibleResearcherResults.length +
-    visibleAreaResults.length +
     visiblePublicationResults.length;
 
   const filtersPanel = (
@@ -252,13 +251,18 @@ function Home() {
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
             Tipo de Publicacao
           </label>
-          <div className="grid grid-cols-1 gap-1.5 text-sm">
+          <div
+            className={`grid grid-cols-1 gap-1.5 text-sm transition-opacity ${
+              resultKinds.Publicacoes ? "" : "opacity-45"
+            }`}
+          >
             {PUBLICATION_TYPES.map((type) => (
               <label key={type} className="flex items-center gap-2 text-foreground/90">
                 <input
                   type="checkbox"
                   checked={typeFilters[type]}
                   onChange={() => toggleType(type)}
+                  disabled={!resultKinds.Publicacoes}
                   className="h-3.5 w-3.5 accent-[var(--teal)]"
                 />
                 {PUBLICATION_TYPE_LABELS[type]}
@@ -274,7 +278,8 @@ function Home() {
             {RESULT_KINDS.map((kind) => (
               <label key={kind} className="flex items-center gap-2 text-foreground/90">
                 <input
-                  type="checkbox"
+                  type="radio"
+                  name="result-kind"
                   checked={resultKinds[kind]}
                   onChange={() => toggleResultKind(kind)}
                   className="h-3.5 w-3.5 accent-[var(--teal)]"
@@ -464,40 +469,6 @@ function Home() {
                 })}
               </div>
             </>
-          )}
-
-          {visibleAreaResults.length > 0 && (
-            <div className="mt-8">
-              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Areas de Pesquisa
-              </h2>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {visibleAreaResults.map((result) => (
-                  <button
-                    key={`${result.result_type}-${result.id}`}
-                    onClick={() =>
-                      navigate({
-                        to: "/pesquisador/$id",
-                        params: { id: String(result.researcher_id ?? result.id) },
-                      })
-                    }
-                    className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--teal)]"
-                  >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
-                      <Search className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary">
-                        {result.title}
-                      </h3>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {result.primary_researcher?.full_name ?? "Pesquisador nao informado"}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
           )}
 
           {visiblePublicationResults.length > 0 && (

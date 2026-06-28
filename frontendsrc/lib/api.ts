@@ -77,7 +77,7 @@ export type SearchResult = {
 };
 
 export type UnifiedSearchResult = {
-  result_type: "paper" | "conference_paper" | "advising" | "researcher" | "research_area";
+  result_type: "paper" | "conference_paper" | "advising" | "researcher";
   id: number;
   title: string;
   year?: number | null;

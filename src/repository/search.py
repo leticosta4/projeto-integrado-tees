@@ -95,17 +95,6 @@ class SearchRepository:
                 ]
             )
 
-            subqueries.append(self._research_area_query())
-            values.extend(
-                self._text_params(text_values)
-                + [
-                    researcher_id,
-                    researcher_id,
-                    area_like,
-                    area_like,
-                ]
-            )
-
         if not subqueries:
             return []
 
