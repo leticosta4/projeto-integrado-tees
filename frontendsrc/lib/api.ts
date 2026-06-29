@@ -94,6 +94,53 @@ export type UnifiedSearchResult = {
   score: number;
 };
 
+export type AnalyticsSummary = {
+  total_researchers: number;
+  total_unique_publications: number;
+  total_authorships: number;
+  collaborative_publications: number;
+  productions_by_type: Record<
+    string,
+    {
+      unique_publications: number;
+      authorships: number;
+      collaborative_publications: number;
+    }
+  >;
+  papers_without_doi: number;
+  conference_papers_without_doi: number;
+  duplicate_doi_groups: number;
+  average_curriculum_update_year?: number | null;
+};
+
+export type AnalyticsYearRow = {
+  year: number;
+  type: "paper" | "conference_paper" | "advising";
+  unique_publications: number;
+  authorships: number;
+  collaborative_publications: number;
+};
+
+export type AnalyticsAreaRow = {
+  area: string;
+  unique_publications: number;
+  authorships: number;
+  collaborative_publications: number;
+};
+
+export type AnalyticsResearcherRow = {
+  researcher_id: number;
+  full_name: string;
+  unique_publications: number;
+  authorships: number;
+  collaborative_publications: number;
+};
+
+export type AnalyticsCoauthorNetwork = {
+  nodes: Array<{ id: number; label: string }>;
+  edges: Array<{ source: number; target: number; weight: number }>;
+};
+
 type RawSearchResult = {
   paper: Paper;
   score: number | string | null;
@@ -195,6 +242,7 @@ export function searchAll(
   query: string,
   options?: {
     limit?: number;
+    offset?: number;
     types?: string[];
     resultKinds?: string[];
     yearFrom?: string | number;
@@ -206,6 +254,7 @@ export function searchAll(
   return apiFetch<UnifiedSearchResult[]>("/search", {
     q: query,
     limit: options?.limit ?? 10,
+    offset: options?.offset,
     types:
       options?.types === undefined
         ? undefined
@@ -223,4 +272,59 @@ export function searchAll(
     area: options?.area,
     researcher_id: options?.researcherId,
   });
+}
+
+type AnalyticsOptions = {
+  types?: string[];
+  yearFrom?: string | number;
+  yearTo?: string | number;
+  area?: string;
+  limit?: number;
+};
+
+function analyticsQuery(options?: AnalyticsOptions) {
+  return {
+    types:
+      options?.types === undefined
+        ? undefined
+        : options.types.length > 0
+          ? options.types.join(",")
+          : "__none__",
+    year_from: options?.yearFrom,
+    year_to: options?.yearTo,
+    area: options?.area,
+    limit: options?.limit,
+  };
+}
+
+export function getAnalyticsSummary(options?: AnalyticsOptions) {
+  return apiFetch<AnalyticsSummary>("/analytics/summary", analyticsQuery(options));
+}
+
+export function getAnalyticsPublicationsByYear(options?: AnalyticsOptions) {
+  return apiFetch<AnalyticsYearRow[]>(
+    "/analytics/publications-by-year",
+    analyticsQuery(options),
+  );
+}
+
+export function getAnalyticsPublicationsByArea(options?: AnalyticsOptions) {
+  return apiFetch<AnalyticsAreaRow[]>(
+    "/analytics/publications-by-area",
+    analyticsQuery(options),
+  );
+}
+
+export function getAnalyticsTopResearchers(options?: AnalyticsOptions) {
+  return apiFetch<AnalyticsResearcherRow[]>(
+    "/analytics/top-researchers",
+    analyticsQuery(options),
+  );
+}
+
+export function getAnalyticsCoauthorNetwork(options?: AnalyticsOptions) {
+  return apiFetch<AnalyticsCoauthorNetwork>(
+    "/analytics/coauthor-network",
+    analyticsQuery(options),
+  );
 }

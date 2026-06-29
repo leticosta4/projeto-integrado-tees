@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, FileText, Search, SlidersHorizontal, User } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, FileText, Search, SlidersHorizontal, User } from "lucide-react";
 import {
   listPapers,
   listResearchAreas,
@@ -36,6 +36,8 @@ const RESULT_KIND_LABELS: Record<ResultKind, string> = {
   Pesquisadores: "Pesquisadores",
   Publicacoes: "Publicacoes",
 };
+
+const SEARCH_PAGE_SIZE = 10;
 
 function uniqueAreas(areas: ResearchArea[]) {
   return Array.from(
@@ -76,6 +78,8 @@ function Home() {
   const [searchResults, setSearchResults] = useState<UnifiedSearchResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
+  const [searchPage, setSearchPage] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const hasQuery = committedQuery.trim().length > 0;
@@ -94,6 +98,21 @@ function Home() {
     Publicacoes: true,
   });
   const [filtersApplied, setFiltersApplied] = useState(false);
+
+  const selectedSearchTypes = useMemo(() => {
+    return PUBLICATION_TYPES
+      .filter((type) => typeFilters[type])
+      .map((type) => {
+        if (type === "Conference Paper") return "conference_paper";
+        return type.toLowerCase();
+      });
+  }, [typeFilters]);
+
+  const selectedSearchResultKinds = useMemo(() => {
+    return RESULT_KINDS
+      .filter((kind) => resultKinds[kind])
+      .map((kind) => (kind === "Pesquisadores" ? "researchers" : "publications"));
+  }, [resultKinds]);
 
   useEffect(() => {
     let active = true;
@@ -125,37 +144,51 @@ function Home() {
   }, []);
 
   useEffect(() => {
+    if (!hasQuery) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [hasQuery, searchPage]);
+
+  useEffect(() => {
+    setSearchPage(0);
+  }, [
+    committedQuery,
+    selectedArea,
+    selectedSearchResultKinds,
+    selectedSearchTypes,
+    yearFrom,
+    yearTo,
+  ]);
+
+  useEffect(() => {
     let active = true;
 
     async function runSearch() {
-      if (!hasQuery) {
+      if (!hasQuery) {a
         setSearchResults([]);
+        setHasMoreResults(false);
         return;
       }
 
       try {
         setSearching(true);
-        const selectedTypes = PUBLICATION_TYPES
-          .filter((type) => typeFilters[type])
-          .map((type) => {
-            if (type === "Conference Paper") return "conference_paper";
-            return type.toLowerCase();
-          });
-        const selectedResultKinds = RESULT_KINDS
-          .filter((kind) => resultKinds[kind])
-          .map((kind) => (kind === "Pesquisadores" ? "researchers" : "publications"));
         const results = await searchAll(committedQuery, {
-          limit: 40,
-          types: selectedTypes,
-          resultKinds: selectedResultKinds,
+          limit: SEARCH_PAGE_SIZE,
+          offset: searchPage * SEARCH_PAGE_SIZE,
+          types: selectedSearchTypes,
+          resultKinds: selectedSearchResultKinds,
           yearFrom,
           yearTo,
           area: selectedArea,
         });
-        if (active) setSearchResults(results);
+        if (active) {
+          setSearchResults(results);
+          setHasMoreResults(results.length === SEARCH_PAGE_SIZE);
+          setError(null);
+        }
       } catch (err) {
         if (active) {
           setSearchResults([]);
+          setHasMoreResults(false);
           setError(err instanceof Error ? err.message : "Erro ao buscar publicacoes.");
         }
       } finally {
@@ -167,7 +200,16 @@ function Home() {
     return () => {
       active = false;
     };
-  }, [committedQuery, hasQuery, resultKinds, selectedArea, typeFilters, yearFrom, yearTo]);
+  }, [
+    committedQuery,
+    hasQuery,
+    searchPage,
+    selectedArea,
+    selectedSearchResultKinds,
+    selectedSearchTypes,
+    yearFrom,
+    yearTo,
+  ]);
 
   const papersByResearcher = useMemo(() => {
     const counts = new Map<number, number>();
@@ -195,6 +237,7 @@ function Home() {
     : [];
 
   const handleSearch = () => {
+    setSearchPage(0);
     setCommittedQuery(query.trim());
   };
 
@@ -415,7 +458,9 @@ function Home() {
       ) : (
         <section className="mx-auto max-w-6xl px-6 py-8">
           <p className="mb-4 text-sm text-muted-foreground">
-            {searching ? "Buscando..." : `${totalResults} resultado${totalResults !== 1 ? "s" : ""} encontrado${totalResults !== 1 ? "s" : ""}`}
+            {searching
+              ? "Buscando..."
+              : `${totalResults} resultado${totalResults !== 1 ? "s" : ""} na pagina ${searchPage + 1}`}
           </p>
           {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
@@ -512,6 +557,30 @@ function Home() {
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {(searchPage > 0 || hasMoreResults) && (
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                onClick={() => setSearchPage((page) => Math.max(0, page - 1))}
+                disabled={searching || searchPage === 0}
+                className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </button>
+              <span className="text-sm text-muted-foreground">
+                Pagina {searchPage + 1}
+              </span>
+              <button
+                onClick={() => setSearchPage((page) => page + 1)}
+                disabled={searching || !hasMoreResults}
+                className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Proxima
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           )}
 
