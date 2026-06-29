@@ -25,6 +25,7 @@ class SearchRepository:
         types: set[str],
         result_kinds: set[str],
         limit: int,
+        offset: int = 0,
         year_from: int | None = None,
         year_to: int | None = None,
         area: str | None = None,
@@ -105,8 +106,10 @@ class SearchRepository:
         ) results
         ORDER BY score DESC, title
         LIMIT %s
+        OFFSET %s
         """
         values.append(limit)
+        values.append(offset)
 
         with self.pool.connection() as conn:
             with conn.cursor() as cur:

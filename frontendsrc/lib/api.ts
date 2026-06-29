@@ -242,6 +242,7 @@ export function searchAll(
   query: string,
   options?: {
     limit?: number;
+    offset?: number;
     types?: string[];
     resultKinds?: string[];
     yearFrom?: string | number;
@@ -253,6 +254,7 @@ export function searchAll(
   return apiFetch<UnifiedSearchResult[]>("/search", {
     q: query,
     limit: options?.limit ?? 10,
+    offset: options?.offset,
     types:
       options?.types === undefined
         ? undefined

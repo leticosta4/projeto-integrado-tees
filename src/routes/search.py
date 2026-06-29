@@ -80,6 +80,17 @@ def search():
     except ValueError:
         return jsonify({"error": "Query parameter 'limit' must be an integer"}), 400
 
+    if limit < 1:
+        return jsonify({"error": "Query parameter 'limit' must be greater than zero"}), 400
+
+    try:
+        offset = int(request.args.get("offset", 0))
+    except ValueError:
+        return jsonify({"error": "Query parameter 'offset' must be an integer"}), 400
+
+    if offset < 0:
+        return jsonify({"error": "Query parameter 'offset' must be greater than or equal to zero"}), 400
+
     year_from, error = _optional_int("year_from")
     if error:
         return error
@@ -111,6 +122,7 @@ def search():
             types=types,
             result_kinds=result_kinds,
             limit=limit,
+            offset=offset,
             year_from=year_from,
             year_to=year_to,
             area=area,

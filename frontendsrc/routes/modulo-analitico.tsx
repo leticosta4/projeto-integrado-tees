@@ -348,15 +348,16 @@ function ModuloAnalitico() {
               </span>
             ))}
           </div>
-          <div className="flex h-64 items-end gap-3 border-l border-b border-border pl-2 pb-2 pt-2">
+          <div className="flex h-64 items-stretch gap-3 border-l border-b border-border pl-2 pb-2 pt-2">
             {yearData.map((row) => {
               const total = row.paper + row.conference + row.advising;
               const height = total > 0 ? (total / maxYear) * 100 : 0;
               return (
-                <div key={row.year} className="flex flex-1 flex-col items-center gap-1">
+                <div key={row.year} className="flex h-full min-w-8 flex-1 flex-col items-center justify-end gap-1">
                   <div
-                    className="flex w-full flex-col-reverse overflow-hidden rounded-t"
-                    style={{ height: `${height}%` }}
+                    className="flex w-full max-w-12 flex-col-reverse overflow-hidden rounded-t bg-secondary/60"
+                    style={{ height: total > 0 ? `${Math.max(height, 4)}%` : "2px" }}
+                    title={`${row.year}: ${total} producoes`}
                   >
                     {total > 0 && (
                       <>
