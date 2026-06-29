@@ -4,6 +4,7 @@ from flask import Flask, request
 
 from service.academic_formation import AcademicFormationService
 from service.advising import AdvisingService
+from service.analytics import AnalyticsService
 from service.conference_paper import ConferencePaperService
 from service.conference_paper_researcher import ConferencePaperResearcherService
 from service.paper import PaperService
@@ -13,6 +14,7 @@ from service.researcher import ResearcherService
 from service.search import SearchService
 from routes.academic_formation import academic_formation_bp
 from routes.advising import advising_bp
+from routes.analytics import analytics_bp
 from routes.conference_paper import conference_paper_bp
 from routes.conference_paper_researcher import conference_paper_researcher_bp
 from routes.paper import paper_bp
@@ -75,6 +77,7 @@ def create_app():
         )
 
     app.config['RESEARCHER_SERVICE'] = ResearcherService(pool)
+    app.config['ANALYTICS_SERVICE'] = AnalyticsService(pool)
     app.config['SEARCH_SERVICE'] = SearchService(pool)
     app.config['PAPER_SERVICE'] = PaperService(pool, embeddings_model)
     app.config['PAPER_RESEARCHER_SERVICE'] = PaperResearcherService(pool)
@@ -89,6 +92,7 @@ def create_app():
     # Blueprints
 
     app.register_blueprint(api_bp)
+    app.register_blueprint(analytics_bp)
     app.register_blueprint(search_bp)
     app.register_blueprint(researcher_bp)
     app.register_blueprint(paper_bp)

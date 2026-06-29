@@ -3,13 +3,18 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Maximize2 } from "lucide-react";
 import { FiltrosPanel } from "@/components/FiltrosPanel";
 import {
-  listAdvisings,
-  listConferencePapers,
-  listPapers,
+  getAnalyticsCoauthorNetwork,
+  getAnalyticsPublicationsByArea,
+  getAnalyticsPublicationsByYear,
+  getAnalyticsSummary,
+  getAnalyticsTopResearchers,
   listResearchAreas,
-  listResearchers,
+  type AnalyticsAreaRow,
+  type AnalyticsCoauthorNetwork,
+  type AnalyticsResearcherRow,
+  type AnalyticsSummary,
+  type AnalyticsYearRow,
   type ResearchArea,
-  type Researcher,
 } from "@/lib/api";
 
 export const Route = createFileRoute("/modulo-analitico")({
@@ -19,22 +24,11 @@ export const Route = createFileRoute("/modulo-analitico")({
   component: ModuloAnalitico,
 });
 
-type PublicationRecord = {
-  researcherId: number;
-  year: number | null;
-  type: "Paper" | "Conference Paper" | "Advising";
-};
-
 type YearRow = {
   year: number;
   paper: number;
   conference: number;
   advising: number;
-};
-
-type ResearcherBar = {
-  name: string;
-  value: number;
 };
 
 type AreaSlice = {
@@ -56,63 +50,124 @@ function areaLabel(area: ResearchArea) {
   return area.area ?? area.major_area ?? area.sub_area ?? area.specialty ?? "Area nao informada";
 }
 
-function buildResearcherAreaMap(areas: ResearchArea[]) {
-  const map = new Map<number, string[]>();
-  for (const area of areas) {
-    const labels = map.get(area.researcher_id) ?? [];
-    const label = areaLabel(area);
-    if (!labels.includes(label)) labels.push(label);
-    map.set(area.researcher_id, labels);
+function typeParam(type: string) {
+  if (type === "Conference Paper") return "conference_paper";
+  if (type === "Advising") return "advising";
+  return "paper";
+}
+
+function typeLabel(type: string) {
+  if (type === "conference_paper") return "Trabalho em evento";
+  if (type === "advising") return "Orientacao";
+  return "Artigo de periodico";
+}
+
+function buildYearRows(rows: AnalyticsYearRow[]) {
+  const map = new Map<number, YearRow>();
+  for (const row of rows) {
+    const current = map.get(row.year) ?? {
+      year: row.year,
+      paper: 0,
+      conference: 0,
+      advising: 0,
+    };
+
+    if (row.type === "paper") current.paper = row.unique_publications;
+    if (row.type === "conference_paper") current.conference = row.unique_publications;
+    if (row.type === "advising") current.advising = row.unique_publications;
+    map.set(row.year, current);
   }
-  return map;
+
+  return Array.from(map.values()).sort((a, b) => a.year - b.year);
+}
+
+function buildAreaSlices(rows: AnalyticsAreaRow[]) {
+  return rows.slice(0, 5).map((row, index) => ({
+    label: row.area,
+    value: row.unique_publications,
+    color: AREA_COLORS[index % AREA_COLORS.length],
+  }));
+}
+
+function emptySummary(): AnalyticsSummary {
+  return {
+    total_researchers: 0,
+    total_unique_publications: 0,
+    total_authorships: 0,
+    collaborative_publications: 0,
+    productions_by_type: {},
+    papers_without_doi: 0,
+    conference_papers_without_doi: 0,
+    duplicate_doi_groups: 0,
+    average_curriculum_update_year: null,
+  };
 }
 
 function ModuloAnalitico() {
   const [yearRange, setYearRange] = useState({ from: 2018, to: 2026 });
   const [selectedTypes, setSelectedTypes] = useState<string[]>([...ALL_TYPES]);
   const [selectedArea, setSelectedArea] = useState<string>("Todas as Areas");
-  const [researchers, setResearchers] = useState<Researcher[]>([]);
-  const [areas, setAreas] = useState<ResearchArea[]>([]);
-  const [records, setRecords] = useState<PublicationRecord[]>([]);
+  const [areaOptions, setAreaOptions] = useState<string[]>(["Todas as Areas"]);
+  const [summary, setSummary] = useState<AnalyticsSummary>(emptySummary);
+  const [yearRows, setYearRows] = useState<AnalyticsYearRow[]>([]);
+  const [areaRows, setAreaRows] = useState<AnalyticsAreaRow[]>([]);
+  const [topResearchers, setTopResearchers] = useState<AnalyticsResearcherRow[]>([]);
+  const [coauthorNetwork, setCoauthorNetwork] = useState<AnalyticsCoauthorNetwork>({
+    nodes: [],
+    edges: [],
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
+    async function loadAreas() {
+      try {
+        const areas = await listResearchAreas();
+        if (!active) return;
+
+        const labels = Array.from(new Set(areas.map(areaLabel))).sort();
+        setAreaOptions(["Todas as Areas", ...labels]);
+      } catch {
+        if (active) setAreaOptions(["Todas as Areas"]);
+      }
+    }
+
+    loadAreas();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
     async function loadAnalyticsData() {
+      const filters = {
+        yearFrom: yearRange.from,
+        yearTo: yearRange.to,
+        area: selectedArea === "Todas as Areas" ? undefined : selectedArea,
+        types: selectedTypes.map(typeParam),
+      };
+
       try {
         setLoading(true);
-        const [researcherData, areaData, paperData, conferenceData, advisingData] =
-          await Promise.all([
-            listResearchers(),
-            listResearchAreas(),
-            listPapers(),
-            listConferencePapers(),
-            listAdvisings(),
-          ]);
+        const [summaryData, byYear, byArea, topData, networkData] = await Promise.all([
+          getAnalyticsSummary(filters),
+          getAnalyticsPublicationsByYear(filters),
+          getAnalyticsPublicationsByArea({ ...filters, limit: 5 }),
+          getAnalyticsTopResearchers({ ...filters, limit: 8 }),
+          getAnalyticsCoauthorNetwork({ ...filters, limit: 50 }),
+        ]);
 
         if (!active) return;
 
-        setResearchers(researcherData);
-        setAreas(areaData);
-        setRecords([
-          ...paperData.map((paper) => ({
-            researcherId: paper.researcher_id,
-            year: paper.year ?? null,
-            type: "Paper" as const,
-          })),
-          ...conferenceData.map((paper) => ({
-            researcherId: paper.researcher_id,
-            year: paper.year ?? paper.event_year ?? null,
-            type: "Conference Paper" as const,
-          })),
-          ...advisingData.map((advising) => ({
-            researcherId: advising.researcher_id,
-            year: advising.year ?? null,
-            type: "Advising" as const,
-          })),
-        ]);
+        setSummary(summaryData);
+        setYearRows(byYear);
+        setAreaRows(byArea);
+        setTopResearchers(topData);
+        setCoauthorNetwork(networkData);
         setError(null);
       } catch (err) {
         if (!active) return;
@@ -126,89 +181,21 @@ function ModuloAnalitico() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [selectedArea, selectedTypes, yearRange]);
 
-  const researcherById = useMemo(() => {
-    return new Map(researchers.map((researcher) => [researcher.id, researcher]));
-  }, [researchers]);
+  const yearData = useMemo(() => buildYearRows(yearRows), [yearRows]);
+  const areaData = useMemo<AreaSlice[]>(() => buildAreaSlices(areaRows), [areaRows]);
 
-  const areasByResearcher = useMemo(() => buildResearcherAreaMap(areas), [areas]);
-
-  const areaOptions = useMemo(() => {
-    const labels = Array.from(new Set(areas.map(areaLabel))).sort();
-    return ["Todas as Areas", ...labels];
-  }, [areas]);
-
-  const filteredRecords = useMemo(() => {
-    return records.filter((record) => {
-      const inYear =
-        record.year == null || (record.year >= yearRange.from && record.year <= yearRange.to);
-      const inType = selectedTypes.includes(record.type);
-      const researcherAreas = areasByResearcher.get(record.researcherId) ?? [];
-      const inArea =
-        selectedArea === "Todas as Areas" || researcherAreas.includes(selectedArea);
-      return inYear && inType && inArea;
-    });
-  }, [areasByResearcher, records, selectedArea, selectedTypes, yearRange]);
-
-  const yearData = useMemo<YearRow[]>(() => {
-    const rows = new Map<number, YearRow>();
-    for (const record of filteredRecords) {
-      if (record.year == null) continue;
-      const row = rows.get(record.year) ?? {
-        year: record.year,
-        paper: 0,
-        conference: 0,
-        advising: 0,
-      };
-      if (record.type === "Paper") row.paper += 1;
-      if (record.type === "Conference Paper") row.conference += 1;
-      if (record.type === "Advising") row.advising += 1;
-      rows.set(record.year, row);
-    }
-    return Array.from(rows.values()).sort((a, b) => a.year - b.year);
-  }, [filteredRecords]);
-
-  const researcherBars = useMemo<ResearcherBar[]>(() => {
-    const counts = new Map<number, number>();
-    for (const record of filteredRecords) {
-      counts.set(record.researcherId, (counts.get(record.researcherId) ?? 0) + 1);
-    }
-    return Array.from(counts.entries())
-      .map(([researcherId, value]) => ({
-        name: researcherById.get(researcherId)?.full_name ?? `Pesquisador ${researcherId}`,
-        value,
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 8);
-  }, [filteredRecords, researcherById]);
-
-  const areaData = useMemo<AreaSlice[]>(() => {
-    const counts = new Map<string, number>();
-    for (const record of filteredRecords) {
-      const labels = areasByResearcher.get(record.researcherId) ?? ["Area nao informada"];
-      for (const label of labels) {
-        if (selectedArea !== "Todas as Areas" && label !== selectedArea) continue;
-        counts.set(label, (counts.get(label) ?? 0) + 1);
-      }
-    }
-
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([label, value], index) => ({
-        label,
-        value,
-        color: AREA_COLORS[index % AREA_COLORS.length],
-      }));
-  }, [areasByResearcher, filteredRecords, selectedArea]);
-
-  const maxBar = Math.max(1, ...researcherBars.map((researcher) => researcher.value));
+  const maxBar = Math.max(1, ...topResearchers.map((researcher) => researcher.authorships));
   const maxYear = Math.max(
     1,
     ...yearData.map((row) => row.paper + row.conference + row.advising),
   );
   const totalArea = areaData.reduce((sum, area) => sum + area.value, 0) || 1;
+  const internalCoauthorships = coauthorNetwork.edges.reduce(
+    (sum, edge) => sum + edge.weight,
+    0,
+  );
 
   let cumulative = 0;
   const donutSegments = areaData.map((area) => {
@@ -239,43 +226,75 @@ function ModuloAnalitico() {
 
         <section className="grid grid-cols-3 gap-4">
           {[
-            { label: "AREAS DE PESQUISA", value: String(areaData.length) },
-            { label: "PESQUISADORES", value: String(researcherBars.length) },
+            { label: "PESQUISADORES", value: summary.total_researchers },
+            { label: "PRODUCOES UNICAS", value: summary.total_unique_publications },
+            { label: "AUTORIAS", value: summary.total_authorships },
+            { label: "PRODUCOES COLABORATIVAS", value: summary.collaborative_publications },
+            { label: "COAUTORIAS INTERNAS", value: internalCoauthorships },
             {
-              label: "PRODUCOES",
-              value: loading ? "..." : filteredRecords.length.toLocaleString("pt-BR"),
+              label: "SEM DOI",
+              value: summary.papers_without_doi + summary.conference_papers_without_doi,
             },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border border-border bg-card px-5 py-4">
               <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">
                 {stat.label}
               </p>
-              <p className="mt-1 font-serif text-3xl text-primary">{stat.value}</p>
+              <p className="mt-1 font-serif text-3xl text-primary">
+                {loading ? "..." : Number(stat.value ?? 0).toLocaleString("pt-BR")}
+              </p>
             </div>
           ))}
         </section>
 
         <section className="mt-6 rounded-xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Producoes por pesquisador</h3>
+            <h3 className="font-semibold text-foreground">Producoes por tipo</h3>
+            <button className="text-muted-foreground hover:text-primary">
+              <Maximize2 className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {Object.entries(summary.productions_by_type).map(([type, values]) => (
+              <div key={type} className="rounded-md border border-border bg-secondary p-3">
+                <p className="text-xs text-muted-foreground">{typeLabel(type)}</p>
+                <p className="mt-1 text-2xl font-semibold text-primary">
+                  {values.unique_publications.toLocaleString("pt-BR")}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {values.authorships.toLocaleString("pt-BR")} autorias
+                </p>
+              </div>
+            ))}
+            {!loading && Object.keys(summary.productions_by_type).length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhuma producao para os filtros atuais.</p>
+            )}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-xl border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">Pesquisadores mais produtivos</h3>
             <button className="text-muted-foreground hover:text-primary">
               <Maximize2 className="h-4 w-4" />
             </button>
           </div>
           <div className="space-y-3">
-            {researcherBars.map((bar) => (
-              <div key={bar.name} className="flex items-center gap-3 text-sm">
-                <span className="w-40 shrink-0 truncate text-muted-foreground">{bar.name}</span>
+            {topResearchers.map((bar) => (
+              <div key={bar.researcher_id} className="flex items-center gap-3 text-sm">
+                <span className="w-48 shrink-0 truncate text-muted-foreground">{bar.full_name}</span>
                 <div className="relative h-5 flex-1 overflow-hidden rounded bg-secondary">
                   <div
                     className="h-full rounded bg-primary"
-                    style={{ width: `${(bar.value / maxBar) * 100}%` }}
+                    style={{ width: `${(bar.authorships / maxBar) * 100}%` }}
                   />
                 </div>
-                <span className="w-10 text-right text-xs text-foreground">{bar.value}</span>
+                <span className="w-20 text-right text-xs text-foreground">
+                  {bar.authorships} autorias
+                </span>
               </div>
             ))}
-            {!loading && researcherBars.length === 0 && (
+            {!loading && topResearchers.length === 0 && (
               <p className="text-xs text-muted-foreground">Nenhum resultado para os filtros atuais.</p>
             )}
           </div>
@@ -319,9 +338,9 @@ function ModuloAnalitico() {
           </div>
           <div className="mb-3 flex flex-wrap gap-3 text-xs">
             {[
-              { label: "Paper", color: "var(--chart-1)" },
-              { label: "Conference Paper", color: "var(--chart-2)" },
-              { label: "Advising", color: "var(--chart-3)" },
+              { label: "Artigo de periodico", color: "var(--chart-1)" },
+              { label: "Trabalho em evento", color: "var(--chart-2)" },
+              { label: "Orientacao", color: "var(--chart-3)" },
             ].map((item) => (
               <span key={item.label} className="flex items-center gap-1.5 text-foreground">
                 <span className="h-3 w-3 rounded-sm" style={{ background: item.color }} />
@@ -353,6 +372,37 @@ function ModuloAnalitico() {
             })}
             {!loading && yearData.length === 0 && (
               <p className="self-center text-xs text-muted-foreground">Nenhum dado no intervalo selecionado.</p>
+            )}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-xl border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-semibold text-foreground">Coautorias internas</h3>
+            <button className="text-muted-foreground hover:text-primary">
+              <Maximize2 className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {coauthorNetwork.edges.slice(0, 8).map((edge) => {
+              const source = coauthorNetwork.nodes.find((node) => node.id === edge.source);
+              const target = coauthorNetwork.nodes.find((node) => node.id === edge.target);
+              return (
+                <div
+                  key={`${edge.source}-${edge.target}`}
+                  className="flex items-center justify-between rounded-md bg-secondary px-3 py-2 text-sm"
+                >
+                  <span className="truncate text-foreground">
+                    {source?.label ?? edge.source} / {target?.label ?? edge.target}
+                  </span>
+                  <span className="ml-3 shrink-0 text-xs text-muted-foreground">
+                    {edge.weight} producoes
+                  </span>
+                </div>
+              );
+            })}
+            {!loading && coauthorNetwork.edges.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nenhuma coautoria interna encontrada.</p>
             )}
           </div>
         </section>

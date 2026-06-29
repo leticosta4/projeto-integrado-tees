@@ -1,13 +1,19 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, BarChart3, Code2 } from "lucide-react";
+import { BarChart3, Code2, Home } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Sidebar() {
   const { location } = useRouterState();
   const path = location.pathname;
 
   const items = [
-    { to: "/", label: "Início", icon: Home, match: path === "/" },
-    { to: "/modulo-analitico", label: "Módulo Analítico", icon: BarChart3, match: path.startsWith("/modulo") },
+    { to: "/", label: "Inicio", icon: Home, match: path === "/" },
+    {
+      to: "/modulo-analitico",
+      label: "Modulo Analitico",
+      icon: BarChart3,
+      match: path.startsWith("/modulo"),
+    },
     { to: "/api", label: "API", icon: Code2, match: path.startsWith("/api") },
   ];
 
@@ -39,6 +45,7 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <ThemeToggle />
     </aside>
   );
 }
