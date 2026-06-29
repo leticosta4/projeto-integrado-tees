@@ -18,9 +18,9 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className="fixed left-0 top-0 z-20 flex h-screen w-[200px] flex-col border-r border-border bg-sidebar px-4 py-6">
+    <aside className="fixed left-0 top-0 z-20 flex h-screen w-[200px] flex-col border-r border-sidebar-border bg-sidebar px-4 py-6 shadow-[var(--shadow-sidebar)]">
       <div className="mb-8 px-2">
-        <h2 className="font-serif text-lg leading-tight text-foreground">
+        <h2 className="font-serif text-lg leading-tight text-sidebar-foreground">
           Pesquisas
           <br />
           <span className="text-primary">Lattes</span>
@@ -33,10 +33,10 @@ export function Sidebar() {
             <Link
               key={it.to}
               to={it.to}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all ${
                 it.match
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />

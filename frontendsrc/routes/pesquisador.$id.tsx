@@ -118,7 +118,7 @@ function ResearcherProfile() {
     <div className="min-h-screen bg-background">
       <FiltrosPanel isOpen={filtersOpen} onToggle={() => setFiltersOpen((value) => !value)} />
       <main className={`ml-[200px] ${filtersOpen ? "mr-[250px]" : "mr-[40px]"} px-8 py-8`}>
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
           <div className="flex items-start gap-5">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
               <User className="h-10 w-10 text-primary" />
@@ -181,10 +181,10 @@ function ResearcherProfile() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-xl border border-border bg-card p-6">
+        <section className="mt-8 rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold text-foreground">Producoes Cientificas</h2>
-            <button className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary">
+            <button className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
               <Download className="h-3.5 w-3.5" /> Exportar CSV
             </button>
           </div>
@@ -193,7 +193,7 @@ function ResearcherProfile() {
               <button
                 key={`${item.kind}-${item.data.id}`}
                 onClick={() => navigateToPublication(navigate, item)}
-                className="flex w-full items-center gap-4 py-3 text-left text-sm transition-colors hover:bg-primary/5"
+                className="flex w-full items-center gap-4 rounded-md px-2 py-3 text-left text-sm transition-colors hover:bg-primary/5"
               >
                 <span className="w-12 shrink-0 text-muted-foreground">
                   {item.data.year ?? "-"}

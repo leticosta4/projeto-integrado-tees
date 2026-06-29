@@ -42,7 +42,7 @@ function AdvisingPage() {
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
-      <header className="border-b border-border bg-sidebar/60 px-6 py-4">
+      <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-4">
           <Link
             to="/pesquisador/$id"
@@ -56,7 +56,7 @@ function AdvisingPage() {
       </header>
 
       <main className="mx-auto max-w-4xl px-6 py-8">
-        <div className="rounded-xl border border-border bg-card p-6">
+        <div className="rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
           <div className="flex items-start gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
               <GraduationCap className="h-7 w-7 text-primary" />
