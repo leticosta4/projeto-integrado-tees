@@ -1,6 +1,6 @@
 from typing import Any
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, jsonify, request
 
 
 analytics_bp = Blueprint("analytics", __name__, url_prefix="/analytics")
@@ -148,6 +148,37 @@ def coauthor_network():
             **_analytics_kwargs(filters),
             limit=filters["limit"] or 50,
         )
+    )
+
+
+EXPORT_TYPES = {"researchers", "areas", "report"}
+
+
+@analytics_bp.get("/export/csv")
+def export_csv():
+    export_type = request.args.get("type", "")
+
+    if export_type not in EXPORT_TYPES:
+        return jsonify({"error": f"Invalid export type '{export_type}'. Must be one of: {', '.join(sorted(EXPORT_TYPES))}"}), 400
+
+    filters, error = _filters()
+    if error:
+        return error
+
+    service = current_app.config["ANALYTICS_SERVICE"]
+    kwargs = _analytics_kwargs(filters)
+
+    if export_type == "researchers":
+        csv_content = service.export_researchers_csv(**kwargs)
+    elif export_type == "areas":
+        csv_content = service.export_areas_csv(**kwargs)
+    else:
+        csv_content = service.export_full_report_csv(**kwargs)
+
+    return Response(
+        csv_content,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={export_type}.csv"},
     )
 
 

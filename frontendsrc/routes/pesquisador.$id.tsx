@@ -1,4 +1,9 @@
-import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useState } from "react";
 import { BarChart3, Download, User } from "lucide-react";
 import { FiltrosPanel } from "@/components/FiltrosPanel";
@@ -21,13 +26,14 @@ export const Route = createFileRoute("/pesquisador/$id")({
   }),
   loader: async ({ params }) => {
     try {
-      const [researcher, papers, areas, conferencePapers, advisings] = await Promise.all([
-        getResearcher(params.id),
-        listPapers({ researcher_id: params.id }),
-        listResearchAreas({ researcher_id: params.id }),
-        listConferencePapers({ researcher_id: params.id }),
-        listAdvisings({ researcher_id: params.id }),
-      ]);
+      const [researcher, papers, areas, conferencePapers, advisings] =
+        await Promise.all([
+          getResearcher(params.id),
+          listPapers({ researcher_id: params.id }),
+          listResearchAreas({ researcher_id: params.id }),
+          listConferencePapers({ researcher_id: params.id }),
+          listAdvisings({ researcher_id: params.id }),
+        ]);
       return { researcher, papers, areas, conferencePapers, advisings };
     } catch {
       throw notFound();
@@ -47,15 +53,27 @@ export const Route = createFileRoute("/pesquisador/$id")({
 });
 
 function areaLabel(area: ResearchArea) {
-  return area.specialty ?? area.sub_area ?? area.area ?? area.major_area ?? "Area nao informada";
+  return (
+    area.specialty ??
+    area.sub_area ??
+    area.area ??
+    area.major_area ??
+    "Area nao informada"
+  );
 }
 
 function researcherDescription(researcher: Researcher) {
   const parts = [
-    researcher.citation_name ? `Nome em citacoes: ${researcher.citation_name}` : null,
+    researcher.citation_name
+      ? `Nome em citacoes: ${researcher.citation_name}`
+      : null,
     researcher.nationality ? `Nacionalidade: ${researcher.nationality}` : null,
-    researcher.birth_state ? `UF de nascimento: ${researcher.birth_state}` : null,
-    researcher.update_date ? `Curriculo atualizado em ${researcher.update_date}` : null,
+    researcher.birth_state
+      ? `UF de nascimento: ${researcher.birth_state}`
+      : null,
+    researcher.update_date
+      ? `Curriculo atualizado em ${researcher.update_date}`
+      : null,
   ].filter(Boolean);
 
   return parts.length > 0
@@ -76,8 +94,33 @@ function publicationLabel(kind: PublicationItem["kind"]) {
 
 function publicationSecondary(item: PublicationItem): string {
   if (item.kind === "paper") return item.data.journal ?? item.data.nature ?? "";
-  if (item.kind === "conference-paper") return item.data.event_name ?? item.data.nature ?? "";
+  if (item.kind === "conference-paper")
+    return item.data.event_name ?? item.data.nature ?? "";
   return item.data.advising_type ?? item.data.level ?? "";
+}
+
+function exportPublicationsCSV(items: PublicationItem[]) {
+  const rows = [["Tipo", "Titulo", "Ano", "Detalhes"]];
+  for (const item of items) {
+    rows.push([
+      publicationLabel(item.kind),
+      item.data.title,
+      String(item.data.year ?? ""),
+      publicationSecondary(item),
+    ]);
+  }
+  const csv = rows
+    .map((row) => row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "publicacoes.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function navigateToPublication(
@@ -85,29 +128,42 @@ function navigateToPublication(
   item: PublicationItem,
 ) {
   if (item.kind === "paper") {
-    navigate({ to: "/publicacao/paper/$id", params: { id: String(item.data.id) } });
+    navigate({
+      to: "/publicacao/paper/$id",
+      params: { id: String(item.data.id) },
+    });
   } else if (item.kind === "conference-paper") {
-    navigate({ to: "/publicacao/conference-paper/$id", params: { id: String(item.data.id) } });
+    navigate({
+      to: "/publicacao/conference-paper/$id",
+      params: { id: String(item.data.id) },
+    });
   } else {
-    navigate({ to: "/publicacao/advising/$id", params: { id: String(item.data.id) } });
+    navigate({
+      to: "/publicacao/advising/$id",
+      params: { id: String(item.data.id) },
+    });
   }
 }
 
 function ResearcherProfile() {
-  const { researcher, papers, areas, conferencePapers, advisings } = Route.useLoaderData() as {
-    researcher: Researcher;
-    papers: Paper[];
-    areas: ResearchArea[];
-    conferencePapers: ConferencePaper[];
-    advisings: Advising[];
-  };
+  const { researcher, papers, areas, conferencePapers, advisings } =
+    Route.useLoaderData() as {
+      researcher: Researcher;
+      papers: Paper[];
+      areas: ResearchArea[];
+      conferencePapers: ConferencePaper[];
+      advisings: Advising[];
+    };
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [visibleCount, setVisibleCount] = useState(20);
   const navigate = useNavigate();
 
   const allPublications: PublicationItem[] = [
     ...papers.map((data) => ({ kind: "paper" as const, data })),
-    ...conferencePapers.map((data) => ({ kind: "conference-paper" as const, data })),
+    ...conferencePapers.map((data) => ({
+      kind: "conference-paper" as const,
+      data,
+    })),
     ...advisings.map((data) => ({ kind: "advising" as const, data })),
   ].sort((a, b) => (b.data.year ?? 0) - (a.data.year ?? 0));
 
@@ -116,8 +172,13 @@ function ResearcherProfile() {
 
   return (
     <div className="min-h-screen bg-background">
-      <FiltrosPanel isOpen={filtersOpen} onToggle={() => setFiltersOpen((value) => !value)} />
-      <main className={`ml-[200px] ${filtersOpen ? "mr-[250px]" : "mr-[40px]"} px-8 py-8`}>
+      <FiltrosPanel
+        isOpen={filtersOpen}
+        onToggle={() => setFiltersOpen((value) => !value)}
+      />
+      <main
+        className={`ml-[200px] ${filtersOpen ? "mr-[250px]" : "mr-[40px]"} px-8 py-8`}
+      >
         <section className="rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
           <div className="flex items-start gap-5">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
@@ -125,7 +186,9 @@ function ResearcherProfile() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3">
-                <h1 className="font-serif text-2xl text-foreground">{researcher.full_name}</h1>
+                <h1 className="font-serif text-2xl text-foreground">
+                  {researcher.full_name}
+                </h1>
                 <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs text-primary">
                   Pesquisador
                 </span>
@@ -147,15 +210,21 @@ function ResearcherProfile() {
           </h2>
           <div className="mt-2 flex gap-6">
             <div>
-              <p className="font-serif text-4xl text-foreground">{papers.length}</p>
+              <p className="font-serif text-4xl text-foreground">
+                {papers.length}
+              </p>
               <p className="text-xs text-muted-foreground">Papers</p>
             </div>
             <div>
-              <p className="font-serif text-4xl text-foreground">{conferencePapers.length}</p>
+              <p className="font-serif text-4xl text-foreground">
+                {conferencePapers.length}
+              </p>
               <p className="text-xs text-muted-foreground">Conference Papers</p>
             </div>
             <div>
-              <p className="font-serif text-4xl text-foreground">{advisings.length}</p>
+              <p className="font-serif text-4xl text-foreground">
+                {advisings.length}
+              </p>
               <p className="text-xs text-muted-foreground">Orientacoes</p>
             </div>
           </div>
@@ -176,15 +245,22 @@ function ResearcherProfile() {
                 </span>
               ))
             ) : (
-              <span className="text-sm text-muted-foreground">Nenhuma area cadastrada.</span>
+              <span className="text-sm text-muted-foreground">
+                Nenhuma area cadastrada.
+              </span>
             )}
           </div>
         </section>
 
         <section className="mt-8 rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">Producoes Cientificas</h2>
-            <button className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
+            <h2 className="font-semibold text-foreground">
+              Producoes Cientificas
+            </h2>
+            <button
+              onClick={() => exportPublicationsCSV(allPublications)}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent"
+            >
               <Download className="h-3.5 w-3.5" /> Exportar CSV
             </button>
           </div>
@@ -201,8 +277,12 @@ function ResearcherProfile() {
                 <span className="w-32 shrink-0 rounded bg-secondary px-2 py-0.5 text-center text-xs text-foreground">
                   {publicationLabel(item.kind)}
                 </span>
-                <span className="flex-1 text-foreground/90">{item.data.title}</span>
-                <span className="text-xs text-primary">{publicationSecondary(item)}</span>
+                <span className="flex-1 text-foreground/90">
+                  {item.data.title}
+                </span>
+                <span className="text-xs text-primary">
+                  {publicationSecondary(item)}
+                </span>
               </button>
             ))}
             {totalPublications === 0 && (
@@ -216,7 +296,8 @@ function ResearcherProfile() {
               onClick={() => setVisibleCount((c) => c + 20)}
               className="mt-4 text-xs text-muted-foreground hover:text-primary"
             >
-              Exibindo {visibleCount} de {totalPublications} itens — carregar mais
+              Exibindo {visibleCount} de {totalPublications} itens — carregar
+              mais
             </button>
           )}
         </section>
