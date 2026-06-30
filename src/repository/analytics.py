@@ -160,9 +160,10 @@ class AnalyticsRepository:
         year_from: int | None = None,
         year_to: int | None = None,
         area: str | None = None,
-        limit: int = 10,
+        limit: int | None = 10,
     ) -> list[dict[str, Any]]:
         area_like = self._area_like(area)
+        limit_clause = "LIMIT %s" if limit is not None else ""
         sql = f"""
         WITH publication_rows AS ({self._publication_rows_cte()}),
         filtered AS (
@@ -181,12 +182,12 @@ class AnalyticsRepository:
         LEFT JOIN research_area ra ON ra.researcher_id = filtered.researcher_id
         GROUP BY COALESCE(ra.area, ra.major_area, ra.sub_area, ra.specialty, 'Area nao informada')
         ORDER BY unique_publications DESC, authorships DESC, area
-        LIMIT %s
+        {limit_clause}
         """
-        return self._fetch_all(
-            sql,
-            [year_from, year_from, year_to, year_to, list(types), area, area_like, limit],
-        )
+        params = [year_from, year_from, year_to, year_to, list(types), area, area_like]
+        if limit is not None:
+            params.append(limit)
+        return self._fetch_all(sql, params)
 
 
     def top_researchers(
@@ -195,9 +196,10 @@ class AnalyticsRepository:
         year_from: int | None = None,
         year_to: int | None = None,
         area: str | None = None,
-        limit: int = 8,
+        limit: int | None = 8,
     ) -> list[dict[str, Any]]:
         area_like = self._area_like(area)
+        limit_clause = "LIMIT %s" if limit is not None else ""
         sql = f"""
         WITH publication_rows AS ({self._publication_rows_cte()}),
         filtered AS (
@@ -216,12 +218,12 @@ class AnalyticsRepository:
         JOIN researcher r ON r.id = filtered.researcher_id
         GROUP BY r.id, r.full_name
         ORDER BY authorships DESC, unique_publications DESC, r.full_name
-        LIMIT %s
+        {limit_clause}
         """
-        return self._fetch_all(
-            sql,
-            [year_from, year_from, year_to, year_to, list(types), area, area_like, limit],
-        )
+        params = [year_from, year_from, year_to, year_to, list(types), area, area_like]
+        if limit is not None:
+            params.append(limit)
+        return self._fetch_all(sql, params)
 
 
     def coauthor_network(
