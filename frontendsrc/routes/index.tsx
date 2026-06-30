@@ -163,7 +163,7 @@ function Home() {
     let active = true;
 
     async function runSearch() {
-      if (!hasQuery) {a
+      if (!hasQuery) {
         setSearchResults([]);
         setHasMoreResults(false);
         return;
@@ -267,7 +267,7 @@ function Home() {
     visiblePublicationResults.length;
 
   const filtersPanel = (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
       <div className="grid gap-4 md:grid-cols-4">
         <div>
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
@@ -279,14 +279,14 @@ function Home() {
               onChange={(e) => setYearFrom(e.target.value)}
               placeholder="De"
               inputMode="numeric"
-              className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
             />
             <input
               value={yearTo}
               onChange={(e) => setYearTo(e.target.value)}
               placeholder="Ate"
               inputMode="numeric"
-              className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
             />
           </div>
         </div>
@@ -339,7 +339,7 @@ function Home() {
           <select
             value={selectedArea}
             onChange={(e) => setSelectedArea(e.target.value)}
-            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
           >
             <option value="">Todas as areas</option>
             {areaOptions.map((area) => (
@@ -374,7 +374,7 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
-      <header className="border-b border-border bg-sidebar/60 px-6 py-4">
+      <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
           <Link to="/" className="font-serif text-xl text-foreground">
             Portal de Pesquisa <span className="text-primary">Lattes</span>
@@ -387,7 +387,7 @@ function Home() {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Buscar pesquisador, area ou publicacao"
-                  className="w-full rounded-full border border-border bg-input py-2 pl-4 pr-10 text-sm text-foreground focus:border-primary focus:outline-none"
+                  className="w-full rounded-full border border-border bg-input py-2 pl-4 pr-10 text-sm text-foreground shadow-sm transition-colors focus:border-primary focus:outline-none"
                 />
                 <button
                   onClick={handleSearch}
@@ -400,7 +400,7 @@ function Home() {
               <button
                 onClick={() => setShowFilters((value) => !value)}
                 aria-label="Filtros"
-                className={`shrink-0 rounded-full bg-primary p-2 text-primary-foreground transition-colors hover:bg-primary/90 ${
+                className={`shrink-0 rounded-full bg-primary p-2 text-primary-foreground shadow-sm transition-all hover:bg-primary/90 ${
                   showFilters ? "ring-2 ring-[var(--teal)] ring-offset-2 ring-offset-background" : ""
                 }`}
               >
@@ -412,7 +412,7 @@ function Home() {
       </header>
 
       {hasQuery && showFilters && (
-        <div className="border-b border-border bg-sidebar/60 px-6 py-5">
+        <div className="border-b border-border/80 bg-card/70 px-6 py-5 backdrop-blur">
           <div className="mx-auto max-w-6xl">{filtersPanel}</div>
         </div>
       )}
@@ -430,7 +430,7 @@ function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Buscar pesquisador, area ou publicacao..."
-                className="w-full rounded-full border border-border bg-input py-3 pl-5 pr-12 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none"
+                className="w-full rounded-full border border-border bg-input py-3 pl-5 pr-12 text-foreground shadow-[var(--shadow-card)] placeholder:text-muted-foreground transition-colors focus:border-primary focus:outline-none"
               />
               <button
                 onClick={handleSearch}
@@ -442,7 +442,7 @@ function Home() {
             </div>
             <button
               onClick={() => setShowFilters((value) => !value)}
-              className={`rounded-full bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90 ${
+              className={`rounded-full bg-primary p-3 text-primary-foreground shadow-[var(--shadow-card)] transition-all hover:bg-primary/90 ${
                 showFilters ? "ring-2 ring-[var(--teal)] ring-offset-2 ring-offset-background" : ""
               }`}
             >
@@ -481,7 +481,7 @@ function Home() {
                       onClick={() =>
                         navigate({ to: "/pesquisador/$id", params: { id: String(researcherId) } })
                       }
-                      className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--teal)]"
+                      className="group flex items-start gap-4 rounded-xl border border-border/80 bg-card p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[var(--shadow-card-hover)]"
                     >
                       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
                         <User className="h-7 w-7 text-primary" />
@@ -537,7 +537,7 @@ function Home() {
                         navigate({ to: "/publicacao/advising/$id", params: { id: String(result.id) } });
                       }
                     }}
-                    className="group flex items-start gap-4 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary hover:shadow-[0_0_0_1px_var(--teal)]"
+                    className="group flex items-start gap-4 rounded-xl border border-border/80 bg-card p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
                       <FileText className="h-6 w-6 text-primary" />
@@ -565,7 +565,7 @@ function Home() {
               <button
                 onClick={() => setSearchPage((page) => Math.max(0, page - 1))}
                 disabled={searching || searchPage === 0}
-                className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Anterior
@@ -576,7 +576,7 @@ function Home() {
               <button
                 onClick={() => setSearchPage((page) => page + 1)}
                 disabled={searching || !hasMoreResults}
-                className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary shadow-sm transition-colors hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Proxima
                 <ChevronRight className="h-4 w-4" />
@@ -585,7 +585,7 @@ function Home() {
           )}
 
           {!loading && !searching && totalResults === 0 && (
-            <div className="rounded-xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
+            <div className="rounded-xl border border-border/80 bg-card p-8 text-center text-sm text-muted-foreground shadow-[var(--shadow-card)]">
               Nenhum resultado encontrado para a busca.
             </div>
           )}

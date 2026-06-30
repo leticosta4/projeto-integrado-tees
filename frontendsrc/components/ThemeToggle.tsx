@@ -32,7 +32,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={toggleTheme}
-      className="mt-auto flex items-center gap-3 rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground transition-colors hover:border-primary hover:text-primary"
+      className="mt-auto flex items-center gap-3 rounded-md border border-border bg-secondary px-3 py-2 text-sm text-foreground shadow-sm transition-colors hover:border-primary hover:bg-accent hover:text-primary"
       aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
     >
       <Icon className="h-4 w-4" />

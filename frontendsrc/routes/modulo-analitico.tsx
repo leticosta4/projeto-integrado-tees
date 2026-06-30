@@ -236,7 +236,7 @@ function ModuloAnalitico() {
               value: summary.papers_without_doi + summary.conference_papers_without_doi,
             },
           ].map((stat) => (
-            <div key={stat.label} className="rounded-xl border border-border bg-card px-5 py-4">
+            <div key={stat.label} className="rounded-xl border border-border/80 bg-card px-5 py-4 shadow-[var(--shadow-card)]">
               <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">
                 {stat.label}
               </p>
@@ -247,7 +247,7 @@ function ModuloAnalitico() {
           ))}
         </section>
 
-        <section className="mt-6 rounded-xl border border-border bg-card p-5">
+        <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Producoes por tipo</h3>
             <button className="text-muted-foreground hover:text-primary">
@@ -256,7 +256,7 @@ function ModuloAnalitico() {
           </div>
           <div className="grid grid-cols-3 gap-3">
             {Object.entries(summary.productions_by_type).map(([type, values]) => (
-              <div key={type} className="rounded-md border border-border bg-secondary p-3">
+              <div key={type} className="rounded-md border border-border/80 bg-secondary p-3">
                 <p className="text-xs text-muted-foreground">{typeLabel(type)}</p>
                 <p className="mt-1 text-2xl font-semibold text-primary">
                   {values.unique_publications.toLocaleString("pt-BR")}
@@ -272,7 +272,7 @@ function ModuloAnalitico() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-xl border border-border bg-card p-5">
+        <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Pesquisadores mais produtivos</h3>
             <button className="text-muted-foreground hover:text-primary">
@@ -283,7 +283,7 @@ function ModuloAnalitico() {
             {topResearchers.map((bar) => (
               <div key={bar.researcher_id} className="flex items-center gap-3 text-sm">
                 <span className="w-48 shrink-0 truncate text-muted-foreground">{bar.full_name}</span>
-                <div className="relative h-5 flex-1 overflow-hidden rounded bg-secondary">
+                <div className="relative h-5 flex-1 overflow-hidden rounded bg-secondary shadow-inner">
                   <div
                     className="h-full rounded bg-primary"
                     style={{ width: `${(bar.authorships / maxBar) * 100}%` }}
@@ -300,7 +300,7 @@ function ModuloAnalitico() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-xl border border-border bg-card p-5">
+        <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Producoes por area</h3>
             <button className="text-muted-foreground hover:text-primary">
@@ -329,7 +329,7 @@ function ModuloAnalitico() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-xl border border-border bg-card p-5">
+        <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Producoes por ano</h3>
             <button className="text-muted-foreground hover:text-primary">
@@ -377,7 +377,7 @@ function ModuloAnalitico() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-xl border border-border bg-card p-5">
+        <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">Coautorias internas</h3>
             <button className="text-muted-foreground hover:text-primary">
@@ -391,7 +391,7 @@ function ModuloAnalitico() {
               return (
                 <div
                   key={`${edge.source}-${edge.target}`}
-                  className="flex items-center justify-between rounded-md bg-secondary px-3 py-2 text-sm"
+                  className="flex items-center justify-between rounded-md border border-border/60 bg-secondary px-3 py-2 text-sm"
                 >
                   <span className="truncate text-foreground">
                     {source?.label ?? edge.source} / {target?.label ?? edge.target}
@@ -411,11 +411,11 @@ function ModuloAnalitico() {
         <div className="mt-6 flex items-center gap-3">
           <Link
             to="/"
-            className="rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground hover:border-primary"
+            className="rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:border-primary hover:bg-accent"
           >
             Voltar ao Inicio
           </Link>
-          <button className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm text-primary hover:bg-primary/20">
+          <button className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm text-primary transition-colors hover:bg-primary/20">
             <Download className="h-4 w-4" /> Exportar relatorio
           </button>
         </div>

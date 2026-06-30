@@ -35,11 +35,11 @@ export function FiltrosPanel({
 }) {
   if (!isOpen) {
     return (
-      <aside className="fixed right-0 top-0 z-20 flex h-screen w-[40px] flex-col items-center gap-3 border-l border-border bg-sidebar py-4">
+      <aside className="fixed right-0 top-0 z-20 flex h-screen w-[40px] flex-col items-center gap-3 border-l border-sidebar-border bg-sidebar py-4 shadow-[var(--shadow-sidebar)]">
         <button
           onClick={onToggle}
           aria-label="Abrir filtros"
-          className="rounded-md p-1 text-primary hover:bg-primary/10"
+          className="rounded-md p-1 text-primary transition-colors hover:bg-primary/10"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -66,7 +66,7 @@ export function FiltrosPanel({
   };
 
   return (
-    <aside className="fixed right-0 top-0 z-20 flex h-screen w-[250px] flex-col gap-5 overflow-y-auto border-l border-border bg-sidebar px-4 py-6">
+    <aside className="fixed right-0 top-0 z-20 flex h-screen w-[250px] flex-col gap-5 overflow-y-auto border-l border-sidebar-border bg-sidebar px-4 py-6 shadow-[var(--shadow-sidebar)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-foreground">
           <Menu className="h-4 w-4 text-primary" />
@@ -76,7 +76,7 @@ export function FiltrosPanel({
           <button
             onClick={onToggle}
             aria-label="Recolher filtros"
-            className="rounded-md p-1 text-primary hover:bg-primary/10"
+            className="rounded-md p-1 text-primary transition-colors hover:bg-primary/10"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -94,7 +94,7 @@ export function FiltrosPanel({
             onChange={(e) =>
               onYearRangeChange?.({ from: Number(e.target.value) || 0, to })
             }
-            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
           />
           <input
             type="number"
@@ -102,7 +102,7 @@ export function FiltrosPanel({
             onChange={(e) =>
               onYearRangeChange?.({ from, to: Number(e.target.value) || 0 })
             }
-            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
           />
         </div>
       </div>
@@ -133,7 +133,7 @@ export function FiltrosPanel({
         <select
           value={area}
           onChange={(e) => onAreaChange?.(e.target.value)}
-          className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+          className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
         >
           {options.map((option) => (
             <option key={option}>{option}</option>
@@ -148,10 +148,10 @@ export function FiltrosPanel({
             Exportar Dados
           </div>
           <div className="space-y-2">
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary">
+            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
               Por Pesquisador <span className="text-primary">CSV</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary">
+            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
               Por Area <span className="text-primary">CSV</span>
             </button>
           </div>
