@@ -1,8 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, Search } from "lucide-react";
 import { getPaper, getResearcher, type Paper, type Researcher } from "@/lib/api";
 
 export const Route = createFileRoute("/publicacao/paper/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    from: typeof search.from === "string" ? search.from : "",
+  }),
   head: ({ params }) => ({
     meta: [{ title: `Paper ${params.id} - Lattes` }],
   }),
@@ -38,21 +41,24 @@ function PaperPage() {
     paper: Paper;
     researcher: Researcher;
   };
+  const { from } = Route.useSearch();
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
-      <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center gap-4">
-          <Link
-            to="/pesquisador/$id"
-            params={{ id: String(researcher.id) }}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para {researcher.full_name}
-          </Link>
-        </div>
-      </header>
+      {from !== "search" && (
+        <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
+          <div className="mx-auto flex max-w-4xl items-center gap-4">
+            <Link
+              to="/pesquisador/$id"
+              params={{ id: String(researcher.id) }}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para {researcher.full_name}
+            </Link>
+          </div>
+        </header>
+      )}
 
       <main className="mx-auto max-w-4xl px-6 py-8">
         <div className="rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
@@ -95,8 +101,8 @@ function PaperPage() {
             <Field label="DOI" value={paper.doi} />
           </dl>
 
-          {paper.doi && (
-            <div className="mt-6 border-t border-border pt-6">
+          <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
+            {paper.doi ? (
               <a
                 href={`https://doi.org/${paper.doi}`}
                 target="_blank"
@@ -105,8 +111,15 @@ function PaperPage() {
               >
                 Acessar publicacao via DOI
               </a>
-            </div>
-          )}
+            ) : <span />}
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+            >
+              <Search className="h-4 w-4" />
+              Voltar para busca
+            </button>
+          </div>
         </div>
       </main>
 

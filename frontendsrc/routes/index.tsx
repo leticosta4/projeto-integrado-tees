@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, FileText, Search, SlidersHorizontal, User } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, FileText, GraduationCap, Presentation, Search, SlidersHorizontal, User } from "lucide-react";
 import {
   listPapers,
   listResearchAreas,
@@ -11,6 +11,9 @@ import {
 } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Portal de Pesquisa Lattes" },
@@ -70,8 +73,9 @@ function resultSecondary(result: UnifiedSearchResult) {
 }
 
 function Home() {
-  const [query, setQuery] = useState("");
-  const [committedQuery, setCommittedQuery] = useState("");
+  const { q: urlQuery = "" } = Route.useSearch();
+  const [query, setQuery] = useState(urlQuery);
+  const [committedQuery, setCommittedQuery] = useState(urlQuery);
   const [showFilters, setShowFilters] = useState(false);
   const [papers, setPapers] = useState<Paper[]>([]);
   const [areas, setAreas] = useState<ResearchArea[]>([]);
@@ -84,9 +88,8 @@ function Home() {
   const navigate = useNavigate();
   const hasQuery = committedQuery.trim().length > 0;
 
-
-  const [yearFrom, setYearFrom] = useState("");
-  const [yearTo, setYearTo] = useState("");
+  const [yearFrom, setYearFrom] = useState("1990");
+  const [yearTo, setYearTo] = useState("2020");
   const [selectedArea, setSelectedArea] = useState("");
   const [typeFilters, setTypeFilters] = useState<Record<PublicationType, boolean>>({
     Paper: true,
@@ -223,7 +226,6 @@ function Home() {
     return uniqueAreas(areas).sort((a, b) => a.localeCompare(b));
   }, [areas]);
 
- 
   const showResearchers = resultKinds.Pesquisadores;
   const showPublications = resultKinds.Publicacoes;
 
@@ -239,6 +241,7 @@ function Home() {
   const handleSearch = () => {
     setSearchPage(0);
     setCommittedQuery(query.trim());
+    navigate({ to: "/", search: { q: query.trim() || undefined }, replace: true });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -350,25 +353,6 @@ function Home() {
           </select>
         </div>
       </div>
-      <div className="mt-4 flex justify-end">
-        <button
-          onClick={handleApplyFilters}
-          className={`flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-            filtersApplied
-              ? "bg-[var(--teal)] text-primary-foreground"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}
-        >
-          {filtersApplied ? (
-            <>
-              <Check className="h-4 w-4" />
-              Aplicado
-            </>
-          ) : (
-            "Aplicar"
-          )}
-        </button>
-      </div>
     </div>
   );
 
@@ -376,9 +360,12 @@ function Home() {
     <div className="min-h-screen bg-background ml-[200px]">
       <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
-          <Link to="/" className="font-serif text-xl text-foreground">
+          <button
+            onClick={() => { setQuery(""); setCommittedQuery(""); navigate({ to: "/", search: { q: undefined }, replace: true }); }}
+            className="font-serif text-xl text-foreground"
+          >
             Portal de Pesquisa <span className="text-primary">Lattes</span>
-          </Link>
+          </button>
           {hasQuery && (
             <div className="flex flex-1 items-center gap-2">
               <div className="relative flex-1">
@@ -527,20 +514,23 @@ function Home() {
                     key={`${result.result_type}-${result.id}`}
                     onClick={() => {
                       if (result.result_type === "paper") {
-                        navigate({ to: "/publicacao/paper/$id", params: { id: String(result.id) } });
+                        navigate({ to: "/publicacao/paper/$id", params: { id: String(result.id) }, search: { from: "search" } });
                       } else if (result.result_type === "conference_paper") {
                         navigate({
                           to: "/publicacao/conference-paper/$id",
                           params: { id: String(result.id) },
+                          search: { from: "search" },
                         });
                       } else {
-                        navigate({ to: "/publicacao/advising/$id", params: { id: String(result.id) } });
+                        navigate({ to: "/publicacao/advising/$id", params: { id: String(result.id) }, search: { from: "search" } });
                       }
                     }}
                     className="group flex items-start gap-4 rounded-xl border border-border/80 bg-card p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
-                      <FileText className="h-6 w-6 text-primary" />
+                      {result.result_type === "paper" && <FileText className="h-6 w-6 text-primary" />}
+                      {result.result_type === "conference_paper" && <Presentation className="h-6 w-6 text-primary" />}
+                      {result.result_type === "advising" && <GraduationCap className="h-6 w-6 text-primary" />}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-foreground group-hover:text-primary">
