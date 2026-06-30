@@ -26,10 +26,11 @@ class Transformer:
 
         if self.enable_embeddings:
             settings = Settings()
+            embedding_model, api_key, dimensions = settings.EMBEDDINGS_CONFIG()
             self.embeddings_model: GoogleGenerativeAIEmbeddings | None = GoogleGenerativeAIEmbeddings(
-                model=settings.EMBEDDING_MODEL,
-                api_key=settings.GOOGLE_API_KEY,
-                output_dimensionality=settings.DIMENSIONS,
+                model=embedding_model,
+                api_key=api_key,
+                output_dimensionality=dimensions,
             )
         else:
             self.embeddings_model = None

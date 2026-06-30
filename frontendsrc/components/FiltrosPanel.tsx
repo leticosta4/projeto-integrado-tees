@@ -1,8 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { Menu, ArrowLeft, Download, ChevronRight, ChevronLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, Menu } from "lucide-react";
 
 const PUB_TYPES = ["Paper", "Conference Paper", "Advising"] as const;
-const AREA_OPTIONS = ["Todas as Áreas", "Área 1", "Área 2", "Área 3"] as const;
+const DEFAULT_AREA_OPTIONS = ["Todas as Areas"] as const;
+
+const PUB_TYPE_LABELS: Record<(typeof PUB_TYPES)[number], string> = {
+  Paper: "Artigo de periodico",
+  "Conference Paper": "Trabalho em evento",
+  Advising: "Orientacao",
+};
 
 export function FiltrosPanel({
   showExport = false,
@@ -14,6 +20,7 @@ export function FiltrosPanel({
   onTypesChange,
   selectedArea,
   onAreaChange,
+  areaOptions,
 }: {
   showExport?: boolean;
   isOpen?: boolean;
@@ -24,14 +31,15 @@ export function FiltrosPanel({
   onTypesChange?: (t: string[]) => void;
   selectedArea?: string;
   onAreaChange?: (a: string) => void;
+  areaOptions?: string[];
 }) {
   if (!isOpen) {
     return (
-      <aside className="fixed right-0 top-0 z-20 flex h-screen w-[40px] flex-col items-center gap-3 border-l border-border bg-sidebar py-4">
+      <aside className="fixed right-0 top-0 z-20 flex h-screen w-[40px] flex-col items-center gap-3 border-l border-sidebar-border bg-sidebar py-4 shadow-[var(--shadow-sidebar)]">
         <button
           onClick={onToggle}
           aria-label="Abrir filtros"
-          className="rounded-md p-1 text-primary hover:bg-primary/10"
+          className="rounded-md p-1 text-primary transition-colors hover:bg-primary/10"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -47,17 +55,18 @@ export function FiltrosPanel({
   }
 
   const from = yearRange?.from ?? 2018;
-  const to = yearRange?.to ?? 2024;
+  const to = yearRange?.to ?? 2026;
   const types = selectedTypes ?? [...PUB_TYPES];
-  const area = selectedArea ?? AREA_OPTIONS[0];
+  const options = areaOptions?.length ? areaOptions : [...DEFAULT_AREA_OPTIONS];
+  const area = selectedArea ?? options[0];
 
-  const toggleType = (t: string) => {
+  const toggleType = (type: string) => {
     if (!onTypesChange) return;
-    onTypesChange(types.includes(t) ? types.filter((x) => x !== t) : [...types, t]);
+    onTypesChange(types.includes(type) ? types.filter((item) => item !== type) : [...types, type]);
   };
 
   return (
-    <aside className="fixed right-0 top-0 z-20 flex h-screen w-[250px] flex-col gap-5 overflow-y-auto border-l border-border bg-sidebar px-4 py-6">
+    <aside className="fixed right-0 top-0 z-20 flex h-screen w-[250px] flex-col gap-5 overflow-y-auto border-l border-sidebar-border bg-sidebar px-4 py-6 shadow-[var(--shadow-sidebar)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold tracking-wide text-foreground">
           <Menu className="h-4 w-4 text-primary" />
@@ -67,7 +76,7 @@ export function FiltrosPanel({
           <button
             onClick={onToggle}
             aria-label="Recolher filtros"
-            className="rounded-md p-1 text-primary hover:bg-primary/10"
+            className="rounded-md p-1 text-primary transition-colors hover:bg-primary/10"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -85,7 +94,7 @@ export function FiltrosPanel({
             onChange={(e) =>
               onYearRangeChange?.({ from: Number(e.target.value) || 0, to })
             }
-            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
           />
           <input
             type="number"
@@ -93,25 +102,25 @@ export function FiltrosPanel({
             onChange={(e) =>
               onYearRangeChange?.({ from, to: Number(e.target.value) || 0 })
             }
-            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+            className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
           />
         </div>
       </div>
 
       <div>
         <label className="mb-2 block text-xs font-medium text-muted-foreground">
-          Tipo de Publicação
+          Tipo de Publicacao
         </label>
         <div className="space-y-1.5 text-sm">
-          {PUB_TYPES.map((t) => (
-            <label key={t} className="flex items-center gap-2 text-foreground/90">
+          {PUB_TYPES.map((type) => (
+            <label key={type} className="flex items-center gap-2 text-foreground/90">
               <input
                 type="checkbox"
-                checked={types.includes(t)}
-                onChange={() => toggleType(t)}
+                checked={types.includes(type)}
+                onChange={() => toggleType(type)}
                 className="h-3.5 w-3.5 accent-[var(--teal)]"
               />
-              {t}
+              {PUB_TYPE_LABELS[type]}
             </label>
           ))}
         </div>
@@ -119,15 +128,15 @@ export function FiltrosPanel({
 
       <div>
         <label className="mb-2 block text-xs font-medium text-muted-foreground">
-          Área de Pesquisa
+          Area de Pesquisa
         </label>
         <select
           value={area}
           onChange={(e) => onAreaChange?.(e.target.value)}
-          className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground focus:border-primary focus:outline-none"
+          className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
         >
-          {AREA_OPTIONS.map((a) => (
-            <option key={a}>{a}</option>
+          {options.map((option) => (
+            <option key={option}>{option}</option>
           ))}
         </select>
       </div>
@@ -139,11 +148,11 @@ export function FiltrosPanel({
             Exportar Dados
           </div>
           <div className="space-y-2">
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary">
+            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
               Por Pesquisador <span className="text-primary">CSV</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary">
-              Por Área <span className="text-primary">CSV</span>
+            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
+              Por Area <span className="text-primary">CSV</span>
             </button>
           </div>
         </div>
@@ -154,7 +163,7 @@ export function FiltrosPanel({
         className="mt-auto flex items-center justify-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/20"
       >
         <ArrowLeft className="h-4 w-4" />
-        Voltar ao Início
+        Voltar ao Inicio
       </Link>
     </aside>
   );

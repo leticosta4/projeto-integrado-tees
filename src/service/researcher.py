@@ -31,6 +31,33 @@ class ResearcherService:
         )
 
 
+    def create_researcher(
+        self,
+        full_name: str,
+        filename: str,
+        filehash: str,
+        lattes_id: str,
+        citation_name: str | None = None,
+        orcid: str | None = None,
+        nationality: str | None = None,
+        birth_country: str | None = None,
+        birth_state: str | None = None,
+        update_date: str | None = None,
+    ) -> int:
+        return self.repository.add(
+            full_name,
+            filename,
+            filehash,
+            lattes_id,
+            citation_name,
+            orcid,
+            nationality,
+            birth_country,
+            birth_state,
+            update_date,
+        )
+
+
     def get_researcher_count(self) -> int:
         return self.repository.count()
 
@@ -45,3 +72,15 @@ class ResearcherService:
 
     def list_all(self, filters: dict[str, object] | None = None) -> list[Researcher]:
         return self.repository.list_all(filters)
+
+
+    def get_by_id(self, researcher_id: int) -> Researcher | None:
+        return self.repository.get_by_id(researcher_id)
+
+
+    def patch(self, researcher_id: int, data: dict[str, object]) -> Researcher | None:
+        return self.repository.patch(researcher_id, data)
+
+
+    def remove_by_id(self, researcher_id: int) -> int:
+        return self.repository.remove_by_id(researcher_id)

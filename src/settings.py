@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     PG_HOST: str = Field(...)
     PG_PORT: str = Field(...)
 
-    GOOGLE_API_KEY: SecretStr = Field(...)
-    EMBEDDING_MODEL: str = Field(...)
-    DIMENSIONS: int = Field(...)
+    GOOGLE_API_KEY: SecretStr | None = Field(default=None)
+    EMBEDDING_MODEL: str | None = Field(default=None)
+    DIMENSIONS: int | None = Field(default=None)
     ENABLE_EMBEDDINGS: bool = Field(default=True)
 
     def MIGRATION_URL(self) -> str:
@@ -20,4 +20,17 @@ class Settings(BaseSettings):
     def DAO_URL(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.PG_HOST}:{self.PG_PORT}/{self.POSTGRES_DB}"
 
-    model_config = SettingsConfigDict(env_file='.env')
+    def EMBEDDINGS_CONFIG(self) -> tuple[str, SecretStr, int]:
+        if (
+            self.GOOGLE_API_KEY is None
+            or self.EMBEDDING_MODEL is None
+            or self.DIMENSIONS is None
+        ):
+            raise ValueError(
+                "GOOGLE_API_KEY, EMBEDDING_MODEL and DIMENSIONS are required "
+                "when embeddings are enabled"
+            )
+
+        return self.EMBEDDING_MODEL, self.GOOGLE_API_KEY, self.DIMENSIONS
+
+    model_config = SettingsConfigDict(env_file='.env', extra='ignore')

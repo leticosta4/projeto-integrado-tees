@@ -1,7 +1,6 @@
 from psycopg_pool import ConnectionPool
 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
+from embeddings import EmbeddingsModel, LocalEmbeddings
 from models.paper import Paper
 from repository.paper import PaperRepository
 
@@ -9,10 +8,12 @@ class PaperService:
     def __init__(
         self,
         pool: ConnectionPool,
-        embeddings_model: GoogleGenerativeAIEmbeddings | None = None
+        embeddings_model: EmbeddingsModel | None = None
     ) -> None:
         self.repository: PaperRepository = PaperRepository(pool)
-        self.embeddings_model = embeddings_model
+        self.embeddings_model: EmbeddingsModel = (
+            embeddings_model if embeddings_model is not None else LocalEmbeddings()
+        )
 
 
     def remove_all_papers(self):
@@ -93,6 +94,10 @@ class PaperService:
         return self.repository.count()
 
 
+    def get_paper_researcher_link_count(self) -> int:
+        return self.repository.count_researcher_links()
+
+
     def get_paper_by_title(self, title: str) -> Paper | None:
         return self.repository.get_by_title(title)
 
@@ -102,16 +107,23 @@ class PaperService:
         query: str,
         limit: int = 10,
     ) -> list[tuple[Paper, float]]:
-        if not self.embeddings_model:
-            raise ValueError("Embeddings model not configured for PaperService")
-
-        # Generate embedding for the query
         embedding = self.embeddings_model.embed_query(query)
-        
-        # Call repository search
+
         return self.repository.search(query, embedding, limit)
-    
+
 
     def list_all(self, filters: dict[str, object] | None = None) -> list[Paper]:
         return self.repository.list_all(filters)
-    
+
+
+    def get_by_id(self, paper_id: int) -> Paper | None:
+        return self.repository.get_by_id(paper_id)
+
+
+    def patch(self, paper_id: int, data: dict[str, object]) -> Paper | None:
+        return self.repository.patch(paper_id, data)
+
+
+    def remove_by_id(self, paper_id: int) -> int:
+        return self.repository.remove_by_id(paper_id)
+

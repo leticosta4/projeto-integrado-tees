@@ -10,12 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ModuloAnaliticoRouteImport } from './routes/modulo-analitico'
+import { Route as ApiRouteImport } from './routes/api'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PesquisadorIdRouteImport } from './routes/pesquisador.$id'
+import { Route as PublicacaoPaperIdRouteImport } from './routes/publicacao.paper.$id'
+import { Route as PublicacaoConferencePaperIdRouteImport } from './routes/publicacao.conference-paper.$id'
+import { Route as PublicacaoAdvisingIdRouteImport } from './routes/publicacao.advising.$id'
 
 const ModuloAnaliticoRoute = ModuloAnaliticoRouteImport.update({
   id: '/modulo-analitico',
   path: '/modulo-analitico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRoute = ApiRouteImport.update({
+  id: '/api',
+  path: '/api',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -28,35 +37,89 @@ const PesquisadorIdRoute = PesquisadorIdRouteImport.update({
   path: '/pesquisador/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicacaoPaperIdRoute = PublicacaoPaperIdRouteImport.update({
+  id: '/publicacao/paper/$id',
+  path: '/publicacao/paper/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicacaoConferencePaperIdRoute =
+  PublicacaoConferencePaperIdRouteImport.update({
+    id: '/publicacao/conference-paper/$id',
+    path: '/publicacao/conference-paper/$id',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const PublicacaoAdvisingIdRoute = PublicacaoAdvisingIdRouteImport.update({
+  id: '/publicacao/advising/$id',
+  path: '/publicacao/advising/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api': typeof ApiRoute
   '/modulo-analitico': typeof ModuloAnaliticoRoute
   '/pesquisador/$id': typeof PesquisadorIdRoute
+  '/publicacao/advising/$id': typeof PublicacaoAdvisingIdRoute
+  '/publicacao/conference-paper/$id': typeof PublicacaoConferencePaperIdRoute
+  '/publicacao/paper/$id': typeof PublicacaoPaperIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api': typeof ApiRoute
   '/modulo-analitico': typeof ModuloAnaliticoRoute
   '/pesquisador/$id': typeof PesquisadorIdRoute
+  '/publicacao/advising/$id': typeof PublicacaoAdvisingIdRoute
+  '/publicacao/conference-paper/$id': typeof PublicacaoConferencePaperIdRoute
+  '/publicacao/paper/$id': typeof PublicacaoPaperIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api': typeof ApiRoute
   '/modulo-analitico': typeof ModuloAnaliticoRoute
   '/pesquisador/$id': typeof PesquisadorIdRoute
+  '/publicacao/advising/$id': typeof PublicacaoAdvisingIdRoute
+  '/publicacao/conference-paper/$id': typeof PublicacaoConferencePaperIdRoute
+  '/publicacao/paper/$id': typeof PublicacaoPaperIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/modulo-analitico' | '/pesquisador/$id'
+  fullPaths:
+    | '/'
+    | '/api'
+    | '/modulo-analitico'
+    | '/pesquisador/$id'
+    | '/publicacao/advising/$id'
+    | '/publicacao/conference-paper/$id'
+    | '/publicacao/paper/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/modulo-analitico' | '/pesquisador/$id'
-  id: '__root__' | '/' | '/modulo-analitico' | '/pesquisador/$id'
+  to:
+    | '/'
+    | '/api'
+    | '/modulo-analitico'
+    | '/pesquisador/$id'
+    | '/publicacao/advising/$id'
+    | '/publicacao/conference-paper/$id'
+    | '/publicacao/paper/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/api'
+    | '/modulo-analitico'
+    | '/pesquisador/$id'
+    | '/publicacao/advising/$id'
+    | '/publicacao/conference-paper/$id'
+    | '/publicacao/paper/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiRoute: typeof ApiRoute
   ModuloAnaliticoRoute: typeof ModuloAnaliticoRoute
   PesquisadorIdRoute: typeof PesquisadorIdRoute
+  PublicacaoAdvisingIdRoute: typeof PublicacaoAdvisingIdRoute
+  PublicacaoConferencePaperIdRoute: typeof PublicacaoConferencePaperIdRoute
+  PublicacaoPaperIdRoute: typeof PublicacaoPaperIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,6 +129,13 @@ declare module '@tanstack/react-router' {
       path: '/modulo-analitico'
       fullPath: '/modulo-analitico'
       preLoaderRoute: typeof ModuloAnaliticoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api': {
+      id: '/api'
+      path: '/api'
+      fullPath: '/api'
+      preLoaderRoute: typeof ApiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -82,13 +152,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PesquisadorIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/publicacao/paper/$id': {
+      id: '/publicacao/paper/$id'
+      path: '/publicacao/paper/$id'
+      fullPath: '/publicacao/paper/$id'
+      preLoaderRoute: typeof PublicacaoPaperIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicacao/conference-paper/$id': {
+      id: '/publicacao/conference-paper/$id'
+      path: '/publicacao/conference-paper/$id'
+      fullPath: '/publicacao/conference-paper/$id'
+      preLoaderRoute: typeof PublicacaoConferencePaperIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publicacao/advising/$id': {
+      id: '/publicacao/advising/$id'
+      path: '/publicacao/advising/$id'
+      fullPath: '/publicacao/advising/$id'
+      preLoaderRoute: typeof PublicacaoAdvisingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiRoute: ApiRoute,
   ModuloAnaliticoRoute: ModuloAnaliticoRoute,
   PesquisadorIdRoute: PesquisadorIdRoute,
+  PublicacaoAdvisingIdRoute: PublicacaoAdvisingIdRoute,
+  PublicacaoConferencePaperIdRoute: PublicacaoConferencePaperIdRoute,
+  PublicacaoPaperIdRoute: PublicacaoPaperIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
