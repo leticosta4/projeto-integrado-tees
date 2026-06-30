@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, LiteralString, cast
 
 from psycopg_pool import ConnectionPool
@@ -379,7 +380,7 @@ class AnalyticsRepository:
         return f"%{area}%" if area else None
 
 
-    def _fetch_all(self, query: str, values: list[object]) -> list[dict[str, Any]]:
+    def _fetch_all(self, query: str, values: Sequence[object]) -> list[dict[str, Any]]:
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(cast(LiteralString, query), tuple(values))
@@ -390,6 +391,6 @@ class AnalyticsRepository:
                 return [dict(zip(columns, row)) for row in cur.fetchall()]
 
 
-    def _fetch_json(self, query: str, values: list[object]) -> dict[str, Any]:
+    def _fetch_json(self, query: str, values: Sequence[object]) -> dict[str, Any]:
         rows = self._fetch_all(query, values)
         return rows[0]["data"] if rows else {}
