@@ -58,8 +58,8 @@ function typeParam(type: string) {
 
 function typeLabel(type: string) {
   if (type === "conference_paper") return "Trabalho em evento";
-  if (type === "advising") return "Orientacao";
-  return "Artigo de periodico";
+  if (type === "advising") return "Orientação";
+  return "Artigo de periódico";
 }
 
 function buildYearRows(rows: AnalyticsYearRow[]) {
@@ -147,7 +147,7 @@ function ModuloAnalitico() {
       const filters = {
         yearFrom: yearRange.from,
         yearTo: yearRange.to,
-        area: selectedArea === "Todas as Areas" ? undefined : selectedArea,
+        area: selectedArea === "Todas as Áreas" ? undefined : selectedArea,
         types: selectedTypes.map(typeParam),
       };
 
@@ -227,9 +227,9 @@ function ModuloAnalitico() {
         <section className="grid grid-cols-3 gap-4">
           {[
             { label: "PESQUISADORES", value: summary.total_researchers },
-            { label: "PRODUCOES UNICAS", value: summary.total_unique_publications },
+            { label: "PRODUÇÕES ÚNICAS", value: summary.total_unique_publications },
             { label: "AUTORIAS", value: summary.total_authorships },
-            { label: "PRODUCOES COLABORATIVAS", value: summary.collaborative_publications },
+            { label: "PRODUÇÕES COLABORATIVAS", value: summary.collaborative_publications },
             { label: "COAUTORIAS INTERNAS", value: internalCoauthorships },
             {
               label: "SEM DOI",
@@ -249,7 +249,7 @@ function ModuloAnalitico() {
 
         <section className="mt-6 rounded-xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Producoes por tipo</h3>
+            <h3 className="font-semibold text-foreground">Produções por tipo</h3>
             <button className="text-muted-foreground hover:text-primary">
               <Maximize2 className="h-4 w-4" />
             </button>
@@ -302,7 +302,7 @@ function ModuloAnalitico() {
 
         <section className="mt-6 rounded-xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Producoes por area</h3>
+            <h3 className="font-semibold text-foreground">Produções por área</h3>
             <button className="text-muted-foreground hover:text-primary">
               <Maximize2 className="h-4 w-4" />
             </button>
@@ -331,16 +331,16 @@ function ModuloAnalitico() {
 
         <section className="mt-6 rounded-xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Producoes por ano</h3>
+            <h3 className="font-semibold text-foreground">Produções por ano</h3>
             <button className="text-muted-foreground hover:text-primary">
               <Maximize2 className="h-4 w-4" />
             </button>
           </div>
           <div className="mb-3 flex flex-wrap gap-3 text-xs">
             {[
-              { label: "Artigo de periodico", color: "var(--chart-1)" },
+              { label: "Artigo de periódico", color: "var(--chart-1)" },
               { label: "Trabalho em evento", color: "var(--chart-2)" },
-              { label: "Orientacao", color: "var(--chart-3)" },
+              { label: "Orientação", color: "var(--chart-3)" },
             ].map((item) => (
               <span key={item.label} className="flex items-center gap-1.5 text-foreground">
                 <span className="h-3 w-3 rounded-sm" style={{ background: item.color }} />
@@ -413,10 +413,10 @@ function ModuloAnalitico() {
             to="/"
             className="rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground hover:border-primary"
           >
-            Voltar ao Inicio
+            Voltar ao Início
           </Link>
           <button className="flex items-center gap-2 rounded-md border border-primary/40 bg-primary/10 px-4 py-2 text-sm text-primary hover:bg-primary/20">
-            <Download className="h-4 w-4" /> Exportar relatorio
+            <Download className="h-4 w-4" /> Exportar relatório
           </button>
         </div>
 

@@ -2,12 +2,12 @@ import { Link } from "@tanstack/react-router";
 import { ArrowLeft, ChevronLeft, ChevronRight, Download, Menu } from "lucide-react";
 
 const PUB_TYPES = ["Paper", "Conference Paper", "Advising"] as const;
-const DEFAULT_AREA_OPTIONS = ["Todas as Areas"] as const;
+const DEFAULT_AREA_OPTIONS = ["Todas as Áreas"] as const;
 
 const PUB_TYPE_LABELS: Record<(typeof PUB_TYPES)[number], string> = {
-  Paper: "Artigo de periodico",
+  Paper: "Artigo de periódico",
   "Conference Paper": "Trabalho em evento",
-  Advising: "Orientacao",
+  Advising: "Orientação",
 };
 
 export function FiltrosPanel({
@@ -109,7 +109,7 @@ export function FiltrosPanel({
 
       <div>
         <label className="mb-2 block text-xs font-medium text-muted-foreground">
-          Tipo de Publicacao
+          Tipo de Publicação
         </label>
         <div className="space-y-1.5 text-sm">
           {PUB_TYPES.map((type) => (
@@ -128,7 +128,7 @@ export function FiltrosPanel({
 
       <div>
         <label className="mb-2 block text-xs font-medium text-muted-foreground">
-          Area de Pesquisa
+          Área de Pesquisa
         </label>
         <select
           value={area}
@@ -152,7 +152,7 @@ export function FiltrosPanel({
               Por Pesquisador <span className="text-primary">CSV</span>
             </button>
             <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary">
-              Por Area <span className="text-primary">CSV</span>
+              Por Área <span className="text-primary">CSV</span>
             </button>
           </div>
         </div>

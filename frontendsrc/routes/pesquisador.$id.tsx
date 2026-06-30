@@ -51,8 +51,12 @@ function areaLabel(area: ResearchArea) {
 }
 
 function researcherDescription(researcher: Researcher) {
+  const firstCitationName = researcher.citation_name
+    ? researcher.citation_name.split(";")[0].trim()
+    : null;
+
   const parts = [
-    researcher.citation_name ? `Nome em citacoes: ${researcher.citation_name}` : null,
+    firstCitationName ? `Nome em citacoes: ${firstCitationName}` : null,
     researcher.nationality ? `Nacionalidade: ${researcher.nationality}` : null,
     researcher.birth_state ? `UF de nascimento: ${researcher.birth_state}` : null,
     researcher.update_date ? `Curriculo atualizado em ${researcher.update_date}` : null,

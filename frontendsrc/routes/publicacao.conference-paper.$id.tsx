@@ -1,72 +1,80 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Presentation } from "lucide-react";
-import { getConferencePaper, getResearcher, type ConferencePaper, type Researcher } from "@/lib/api";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, GraduationCap, Search } from "lucide-react";
+import { getAdvising, getResearcher, type Advising, type Researcher } from "@/lib/api";
 
 export const Route = createFileRoute("/publicacao/conference-paper/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    from: typeof search.from === "string" ? search.from : "",
+  }),
   head: ({ params }) => ({
-    meta: [{ title: `Conference Paper ${params.id} - Lattes` }],
+    meta: [{ title: `Orientação ${params.id} - Lattes` }],
   }),
   loader: async ({ params }) => {
     try {
-      const conferencePaper = await getConferencePaper(params.id);
-      const researcher = await getResearcher(conferencePaper.researcher_id);
-      return { conferencePaper, researcher };
+      const advising = await getAdvising(params.id);
+      const researcher = await getResearcher(advising.researcher_id);
+      return { advising, researcher };
     } catch {
       throw notFound();
     }
   },
-  component: ConferencePaperPage,
+  component: AdvisingPage,
   notFoundComponent: () => (
     <div className="flex min-h-screen items-center justify-center text-foreground">
-      Publicacao nao encontrada.
+      Orientação nao encontrada.
     </div>
   ),
 });
 
-function Field({ label, value }: { label: string; value: string | number | null | undefined }) {
-  if (!value) return null;
+function Field({ label, value }: { label: string; value: string | number | boolean | null | undefined }) {
+  if (value === null || value === undefined || value === "") return null;
+  const display = typeof value === "boolean" ? (value ? "Sim" : "Não") : value;
   return (
     <div>
       <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm text-foreground">{value}</dd>
+      <dd className="mt-0.5 text-sm text-foreground">{display}</dd>
     </div>
   );
 }
 
-function ConferencePaperPage() {
-  const { conferencePaper, researcher } = Route.useLoaderData() as {
-    conferencePaper: ConferencePaper;
+function AdvisingPage() {
+  const { advising, researcher } = Route.useLoaderData() as {
+    advising: Advising;
     researcher: Researcher;
   };
+  const { from } = Route.useSearch();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
-      <header className="border-b border-border bg-sidebar/60 px-6 py-4">
-        <div className="mx-auto flex max-w-4xl items-center gap-4">
-          <Link
-            to="/pesquisador/$id"
-            params={{ id: String(researcher.id) }}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para {researcher.full_name}
-          </Link>
-        </div>
-      </header>
+      {from !== "search" && (
+        <header className="border-b border-border bg-sidebar/60 px-6 py-4">
+          <div className="mx-auto flex max-w-4xl items-center gap-4">
+            <Link
+              to="/pesquisador/$id"
+              params={{ id: String(researcher.id) }}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para {researcher.full_name}
+            </Link>
+          </div>
+        </header>
+      )}
 
       <main className="mx-auto max-w-4xl px-6 py-8">
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="flex items-start gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
-              <Presentation className="h-7 w-7 text-primary" />
+              <GraduationCap className="h-7 w-7 text-primary" />
             </div>
             <div className="flex-1">
               <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs text-primary">
-                Conference Paper
+                Orientação
               </span>
-              <h1 className="mt-2 font-serif text-2xl text-foreground">{conferencePaper.title}</h1>
+              <h1 className="mt-2 font-serif text-2xl text-foreground">{advising.title}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Pesquisador:{" "}
+                Orientador:{" "}
                 <Link
                   to="/pesquisador/$id"
                   params={{ id: String(researcher.id) }}
@@ -79,36 +87,26 @@ function ConferencePaperPage() {
           </div>
 
           <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-6 md:grid-cols-3">
-            <Field label="Ano" value={conferencePaper.year} />
-            <Field label="Idioma" value={conferencePaper.language} />
-            <Field label="Natureza" value={conferencePaper.nature} />
-            <Field label="Pais" value={conferencePaper.country} />
-            <Field label="Evento" value={conferencePaper.event_name} />
-            <Field label="Cidade do Evento" value={conferencePaper.event_city} />
-            <Field label="Ano do Evento" value={conferencePaper.event_year} />
-            <Field label="Classificacao do Evento" value={conferencePaper.event_classification} />
-            <Field label="Anais" value={conferencePaper.proceedings_title} />
-            <Field label="ISBN" value={conferencePaper.isbn} />
-            <Field label="Paginas" value={
-              conferencePaper.first_page && conferencePaper.last_page
-                ? `${conferencePaper.first_page} - ${conferencePaper.last_page}`
-                : conferencePaper.first_page ?? conferencePaper.last_page
-            } />
-            <Field label="DOI" value={conferencePaper.doi} />
+            <Field label="Ano" value={advising.year} />
+            <Field label="Nível" value={advising.level} />
+            <Field label="Tipo" value={advising.advising_type} />
+            <Field label="Orientando" value={advising.advisee_name} />
+            <Field label="Instituição" value={advising.institution} />
+            <Field label="Curso" value={advising.course} />
+            <Field label="País" value={advising.country} />
+            <Field label="Bolsista" value={advising.had_scholarship} />
+            <Field label="Agência de Fomento" value={advising.funding_agency} />
           </dl>
 
-          {conferencePaper.doi && (
-            <div className="mt-6 border-t border-border pt-6">
-              <a
-                href={`https://doi.org/${conferencePaper.doi}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Acessar publicacao via DOI
-              </a>
-            </div>
-          )}
+          <div className="mt-6 flex items-center justify-end border-t border-border pt-6">
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+            >
+              <Search className="h-4 w-4" />
+              Voltar para busca
+            </button>
+          </div>
         </div>
       </main>
 

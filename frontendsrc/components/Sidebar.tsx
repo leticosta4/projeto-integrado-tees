@@ -7,10 +7,10 @@ export function Sidebar() {
   const path = location.pathname;
 
   const items = [
-    { to: "/", label: "Inicio", icon: Home, match: path === "/" },
+    { to: "/", label: "Início", icon: Home, match: path === "/" },
     {
       to: "/modulo-analitico",
-      label: "Modulo Analitico",
+      label: "Módulo Analítico",
       icon: BarChart3,
       match: path.startsWith("/modulo"),
     },

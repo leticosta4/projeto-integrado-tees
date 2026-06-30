@@ -1,10 +1,13 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, GraduationCap } from "lucide-react";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, GraduationCap, Search } from "lucide-react";
 import { getAdvising, getResearcher, type Advising, type Researcher } from "@/lib/api";
 
 export const Route = createFileRoute("/publicacao/advising/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    from: typeof search.from === "string" ? search.from : "",
+  }),
   head: ({ params }) => ({
-    meta: [{ title: `Orientacao ${params.id} - Lattes` }],
+    meta: [{ title: `Orientação ${params.id} - Lattes` }],
   }),
   loader: async ({ params }) => {
     try {
@@ -18,14 +21,14 @@ export const Route = createFileRoute("/publicacao/advising/$id")({
   component: AdvisingPage,
   notFoundComponent: () => (
     <div className="flex min-h-screen items-center justify-center text-foreground">
-      Orientacao nao encontrada.
+      Orientação nao encontrada.
     </div>
   ),
 });
 
 function Field({ label, value }: { label: string; value: string | number | boolean | null | undefined }) {
   if (value === null || value === undefined || value === "") return null;
-  const display = typeof value === "boolean" ? (value ? "Sim" : "Nao") : value;
+  const display = typeof value === "boolean" ? (value ? "Sim" : "Não") : value;
   return (
     <div>
       <dt className="text-xs font-medium text-muted-foreground">{label}</dt>
@@ -39,21 +42,25 @@ function AdvisingPage() {
     advising: Advising;
     researcher: Researcher;
   };
+  const { from } = Route.useSearch();
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
-      <header className="border-b border-border bg-sidebar/60 px-6 py-4">
-        <div className="mx-auto flex max-w-4xl items-center gap-4">
-          <Link
-            to="/pesquisador/$id"
-            params={{ id: String(researcher.id) }}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para {researcher.full_name}
-          </Link>
-        </div>
-      </header>
+      {from !== "search" && (
+        <header className="border-b border-border bg-sidebar/60 px-6 py-4">
+          <div className="mx-auto flex max-w-4xl items-center gap-4">
+            <Link
+              to="/pesquisador/$id"
+              params={{ id: String(researcher.id) }}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para {researcher.full_name}
+            </Link>
+          </div>
+        </header>
+      )}
 
       <main className="mx-auto max-w-4xl px-6 py-8">
         <div className="rounded-xl border border-border bg-card p-6">
@@ -63,7 +70,7 @@ function AdvisingPage() {
             </div>
             <div className="flex-1">
               <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs text-primary">
-                Orientacao
+                Orientação
               </span>
               <h1 className="mt-2 font-serif text-2xl text-foreground">{advising.title}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -81,15 +88,25 @@ function AdvisingPage() {
 
           <dl className="mt-6 grid grid-cols-2 gap-4 border-t border-border pt-6 md:grid-cols-3">
             <Field label="Ano" value={advising.year} />
-            <Field label="Nivel" value={advising.level} />
+            <Field label="Nível" value={advising.level} />
             <Field label="Tipo" value={advising.advising_type} />
             <Field label="Orientando" value={advising.advisee_name} />
-            <Field label="Instituicao" value={advising.institution} />
+            <Field label="Instituição" value={advising.institution} />
             <Field label="Curso" value={advising.course} />
-            <Field label="Pais" value={advising.country} />
+            <Field label="País" value={advising.country} />
             <Field label="Bolsista" value={advising.had_scholarship} />
-            <Field label="Agencia de Fomento" value={advising.funding_agency} />
+            <Field label="Agência de Fomento" value={advising.funding_agency} />
           </dl>
+
+          <div className="mt-6 flex items-center justify-end border-t border-border pt-6">
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+            >
+              <Search className="h-4 w-4" />
+              Voltar para busca
+            </button>
+          </div>
         </div>
       </main>
 

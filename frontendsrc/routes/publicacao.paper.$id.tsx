@@ -1,5 +1,5 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, FileText } from "lucide-react";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, FileText, Search } from "lucide-react";
 import { getPaper, getResearcher, type Paper, type Researcher } from "@/lib/api";
 
 export const Route = createFileRoute("/publicacao/paper/$id")({
@@ -38,6 +38,7 @@ function PaperPage() {
     paper: Paper;
     researcher: Researcher;
   };
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
@@ -95,8 +96,8 @@ function PaperPage() {
             <Field label="DOI" value={paper.doi} />
           </dl>
 
-          {paper.doi && (
-            <div className="mt-6 border-t border-border pt-6">
+          <div className="mt-6 flex items-center justify-between border-t border-border pt-6">
+            {paper.doi ? (
               <a
                 href={`https://doi.org/${paper.doi}`}
                 target="_blank"
@@ -105,8 +106,15 @@ function PaperPage() {
               >
                 Acessar publicacao via DOI
               </a>
-            </div>
-          )}
+            ) : <span />}
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+            >
+              <Search className="h-4 w-4" />
+              Voltar para busca
+            </button>
+          </div>
         </div>
       </main>
 
