@@ -10,6 +10,19 @@ export type Researcher = {
   update_date?: string | null;
 };
 
+export type ResearcherExternalProfile = {
+  id: string;
+  lattesId: string;
+  nome: string;
+  tipo?: string | null;
+  formacaoAcademica?: string | null;
+  openAlexId?: string | null;
+  orcidId?: string | null;
+  imageUrl?: string | null;
+  indexH?: number | null;
+  indexI10?: number | null;
+};
+
 export type Paper = {
   id: number;
   title: string;
@@ -195,6 +208,13 @@ export function listResearchers(query?: Record<string, QueryValue>) {
 
 export function getResearcher(id: string | number) {
   return apiFetch<Researcher>(`/researchers/${id}`);
+}
+
+export function getResearcherExternalProfile(id: string | number) {
+  return apiFetch<{
+    researcher: Researcher;
+    external_profile: ResearcherExternalProfile | null;
+  }>(`/researchers/${id}/external-profile`);
 }
 
 export function listPapers(query?: Record<string, QueryValue>) {

@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, FileText, GraduationCap, Presentation, Search, SlidersHorizontal, User } from "lucide-react";
 import {
+  getResearcherExternalProfile,
   listPapers,
   listResearchAreas,
   searchAll,
@@ -80,6 +81,7 @@ function Home() {
   const [papers, setPapers] = useState<Paper[]>([]);
   const [areas, setAreas] = useState<ResearchArea[]>([]);
   const [searchResults, setSearchResults] = useState<UnifiedSearchResult[]>([]);
+  const [researcherImageUrls, setResearcherImageUrls] = useState<Record<number, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [hasMoreResults, setHasMoreResults] = useState(false);
@@ -237,6 +239,46 @@ function Home() {
         ["paper", "conference_paper", "advising"].includes(result.result_type),
       )
     : [];
+
+  useEffect(() => {
+    let active = true;
+    const researcherIds = Array.from(
+      new Set(
+        visibleResearcherResults
+          .map((result) => result.researcher_id ?? result.id)
+          .filter((id): id is number => typeof id === "number"),
+      ),
+    ).filter((id) => !(id in researcherImageUrls));
+
+    if (researcherIds.length === 0) return;
+
+    async function loadResearcherImages() {
+      const entries = await Promise.all(
+        researcherIds.map(async (id) => {
+          try {
+            const response = await getResearcherExternalProfile(id);
+            return [id, response.external_profile?.imageUrl ?? null] as const;
+          } catch {
+            return [id, null] as const;
+          }
+        }),
+      );
+
+      if (!active) return;
+      setResearcherImageUrls((current) => {
+        const next = { ...current };
+        for (const [id, imageUrl] of entries) {
+          next[id] = imageUrl;
+        }
+        return next;
+      });
+    }
+
+    loadResearcherImages();
+    return () => {
+      active = false;
+    };
+  }, [researcherImageUrls, visibleResearcherResults]);
 
   const handleSearch = () => {
     setSearchPage(0);
@@ -470,8 +512,22 @@ function Home() {
                       }
                       className="group flex items-start gap-4 rounded-xl border border-border/80 bg-card p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[var(--shadow-card-hover)]"
                     >
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
-                        <User className="h-7 w-7 text-primary" />
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 ring-2 ring-primary/40">
+                        {researcherImageUrls[researcherId] ? (
+                          <img
+                            src={researcherImageUrls[researcherId] ?? ""}
+                            alt={`Foto de ${result.title}`}
+                            className="h-full w-full object-cover"
+                            onError={() =>
+                              setResearcherImageUrls((current) => ({
+                                ...current,
+                                [researcherId]: null,
+                              }))
+                            }
+                          />
+                        ) : (
+                          <User className="h-7 w-7 text-primary" />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-foreground group-hover:text-primary">

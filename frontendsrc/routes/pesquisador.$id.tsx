@@ -9,6 +9,7 @@ import { BarChart3, Download, User } from "lucide-react";
 import { FiltrosPanel } from "@/components/FiltrosPanel";
 import {
   getResearcher,
+  getResearcherExternalProfile,
   listAdvisings,
   listConferencePapers,
   listPapers,
@@ -197,6 +198,7 @@ function ResearcherProfile() {
     ...PROFILE_PUBLICATION_TYPES,
   ]);
   const [selectedArea, setSelectedArea] = useState(DEFAULT_AREA_OPTION);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
 
   const areaOptions = useMemo(() => {
     const labels = Array.from(new Set(areas.map(areaLabel))).sort();
@@ -216,6 +218,26 @@ function ResearcherProfile() {
 
     return matchesYear && matchesType && areaMatches;
   });
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProfileImage() {
+      try {
+        const response = await getResearcherExternalProfile(researcher.id);
+        if (active) {
+          setProfileImageUrl(response.external_profile?.imageUrl ?? null);
+        }
+      } catch {
+        if (active) setProfileImageUrl(null);
+      }
+    }
+
+    loadProfileImage();
+    return () => {
+      active = false;
+    };
+  }, [researcher.id]);
 
   useEffect(() => {
     setVisibleCount(20);
@@ -249,8 +271,17 @@ function ResearcherProfile() {
       >
         <section className="rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
           <div className="flex items-start gap-5">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
-              <User className="h-10 w-10 text-primary" />
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 ring-2 ring-primary/40">
+              {profileImageUrl ? (
+                <img
+                  src={profileImageUrl}
+                  alt={`Foto de ${researcher.full_name}`}
+                  className="h-full w-full object-cover"
+                  onError={() => setProfileImageUrl(null)}
+                />
+              ) : (
+                <User className="h-10 w-10 text-primary" />
+              )}
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-3">
