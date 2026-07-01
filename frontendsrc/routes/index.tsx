@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, FileText, Search, SlidersHorizontal, User } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, FileText, GraduationCap, Presentation, Search, SlidersHorizontal, User } from "lucide-react";
 import {
+  getResearcherExternalProfile,
   listPapers,
   listResearchAreas,
   searchAll,
@@ -11,10 +12,13 @@ import {
 } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Portal de Pesquisa Lattes" },
-      { name: "description", content: "Busca de pesquisadores e producoes cientificas." },
+      { name: "description", content: "Busca de pesquisadores e produções científicas." },
     ],
   }),
   component: Home,
@@ -27,14 +31,14 @@ const RESULT_KINDS = ["Pesquisadores", "Publicacoes"] as const;
 type ResultKind = (typeof RESULT_KINDS)[number];
 
 const PUBLICATION_TYPE_LABELS: Record<PublicationType, string> = {
-  Paper: "Artigo de periodico",
+  Paper: "Artigo de periódico",
   "Conference Paper": "Trabalho em evento",
-  Advising: "Orientacao",
+  Advising: "Orientação",
 };
 
 const RESULT_KIND_LABELS: Record<ResultKind, string> = {
   Pesquisadores: "Pesquisadores",
-  Publicacoes: "Publicacoes",
+  Publicacoes: "Publicações",
 };
 
 const SEARCH_PAGE_SIZE = 10;
@@ -50,9 +54,9 @@ function uniqueAreas(areas: ResearchArea[]) {
 }
 
 function resultTypeLabel(type: UnifiedSearchResult["result_type"]) {
-  if (type === "paper") return "Artigo de periodico";
+  if (type === "paper") return "Artigo de periódico";
   if (type === "conference_paper") return "Trabalho em evento";
-  if (type === "advising") return "Orientacao";
+  if (type === "advising") return "Orientação";
   return "Pesquisador";
 }
 
@@ -70,12 +74,14 @@ function resultSecondary(result: UnifiedSearchResult) {
 }
 
 function Home() {
-  const [query, setQuery] = useState("");
-  const [committedQuery, setCommittedQuery] = useState("");
+  const { q: urlQuery = "" } = Route.useSearch();
+  const [query, setQuery] = useState(urlQuery);
+  const [committedQuery, setCommittedQuery] = useState(urlQuery);
   const [showFilters, setShowFilters] = useState(false);
   const [papers, setPapers] = useState<Paper[]>([]);
   const [areas, setAreas] = useState<ResearchArea[]>([]);
   const [searchResults, setSearchResults] = useState<UnifiedSearchResult[]>([]);
+  const [researcherImageUrls, setResearcherImageUrls] = useState<Record<number, string | null>>({});
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [hasMoreResults, setHasMoreResults] = useState(false);
@@ -84,9 +90,8 @@ function Home() {
   const navigate = useNavigate();
   const hasQuery = committedQuery.trim().length > 0;
 
-
-  const [yearFrom, setYearFrom] = useState("");
-  const [yearTo, setYearTo] = useState("");
+  const [yearFrom, setYearFrom] = useState("1990");
+  const [yearTo, setYearTo] = useState("2020");
   const [selectedArea, setSelectedArea] = useState("");
   const [typeFilters, setTypeFilters] = useState<Record<PublicationType, boolean>>({
     Paper: true,
@@ -189,7 +194,7 @@ function Home() {
         if (active) {
           setSearchResults([]);
           setHasMoreResults(false);
-          setError(err instanceof Error ? err.message : "Erro ao buscar publicacoes.");
+          setError(err instanceof Error ? err.message : "Erro ao buscar publicações.");
         }
       } finally {
         if (active) setSearching(false);
@@ -223,7 +228,6 @@ function Home() {
     return uniqueAreas(areas).sort((a, b) => a.localeCompare(b));
   }, [areas]);
 
- 
   const showResearchers = resultKinds.Pesquisadores;
   const showPublications = resultKinds.Publicacoes;
 
@@ -236,9 +240,50 @@ function Home() {
       )
     : [];
 
+  useEffect(() => {
+    let active = true;
+    const researcherIds = Array.from(
+      new Set(
+        visibleResearcherResults
+          .map((result) => result.researcher_id ?? result.id)
+          .filter((id): id is number => typeof id === "number"),
+      ),
+    ).filter((id) => !(id in researcherImageUrls));
+
+    if (researcherIds.length === 0) return;
+
+    async function loadResearcherImages() {
+      const entries = await Promise.all(
+        researcherIds.map(async (id) => {
+          try {
+            const response = await getResearcherExternalProfile(id);
+            return [id, response.external_profile?.imageUrl ?? null] as const;
+          } catch {
+            return [id, null] as const;
+          }
+        }),
+      );
+
+      if (!active) return;
+      setResearcherImageUrls((current) => {
+        const next = { ...current };
+        for (const [id, imageUrl] of entries) {
+          next[id] = imageUrl;
+        }
+        return next;
+      });
+    }
+
+    loadResearcherImages();
+    return () => {
+      active = false;
+    };
+  }, [researcherImageUrls, visibleResearcherResults]);
+
   const handleSearch = () => {
     setSearchPage(0);
     setCommittedQuery(query.trim());
+    navigate({ to: "/", search: { q: query.trim() || undefined }, replace: true });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -292,7 +337,7 @@ function Home() {
         </div>
         <div>
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
-            Tipo de Publicacao
+            Tipo de Publicação
           </label>
           <div
             className={`grid grid-cols-1 gap-1.5 text-sm transition-opacity ${
@@ -334,14 +379,14 @@ function Home() {
         </div>
         <div>
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
-            Area de Pesquisa
+            Área de Pesquisa
           </label>
           <select
             value={selectedArea}
             onChange={(e) => setSelectedArea(e.target.value)}
             className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
           >
-            <option value="">Todas as areas</option>
+            <option value="">Todas as áreas</option>
             {areaOptions.map((area) => (
               <option key={area} value={area}>
                 {area}
@@ -350,25 +395,6 @@ function Home() {
           </select>
         </div>
       </div>
-      <div className="mt-4 flex justify-end">
-        <button
-          onClick={handleApplyFilters}
-          className={`flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-            filtersApplied
-              ? "bg-[var(--teal)] text-primary-foreground"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}
-        >
-          {filtersApplied ? (
-            <>
-              <Check className="h-4 w-4" />
-              Aplicado
-            </>
-          ) : (
-            "Aplicar"
-          )}
-        </button>
-      </div>
     </div>
   );
 
@@ -376,9 +402,12 @@ function Home() {
     <div className="min-h-screen bg-background ml-[200px]">
       <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
-          <Link to="/" className="font-serif text-xl text-foreground">
+          <button
+            onClick={() => { setQuery(""); setCommittedQuery(""); navigate({ to: "/", search: { q: undefined }, replace: true }); }}
+            className="font-serif text-xl text-foreground"
+          >
             Portal de Pesquisa <span className="text-primary">Lattes</span>
-          </Link>
+          </button>
           {hasQuery && (
             <div className="flex flex-1 items-center gap-2">
               <div className="relative flex-1">
@@ -386,7 +415,7 @@ function Home() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Buscar pesquisador, area ou publicacao"
+                  placeholder="Buscar pesquisador, área ou publicação"
                   className="w-full rounded-full border border-border bg-input py-2 pl-4 pr-10 text-sm text-foreground shadow-sm transition-colors focus:border-primary focus:outline-none"
                 />
                 <button
@@ -429,7 +458,7 @@ function Home() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Buscar pesquisador, area ou publicacao..."
+                placeholder="Buscar pesquisador, área ou publicação..."
                 className="w-full rounded-full border border-border bg-input py-3 pl-5 pr-12 text-foreground shadow-[var(--shadow-card)] placeholder:text-muted-foreground transition-colors focus:border-primary focus:outline-none"
               />
               <button
@@ -483,8 +512,22 @@ function Home() {
                       }
                       className="group flex items-start gap-4 rounded-xl border border-border/80 bg-card p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[var(--shadow-card-hover)]"
                     >
-                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
-                        <User className="h-7 w-7 text-primary" />
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 ring-2 ring-primary/40">
+                        {researcherImageUrls[researcherId] ? (
+                          <img
+                            src={researcherImageUrls[researcherId] ?? ""}
+                            alt={`Foto de ${result.title}`}
+                            className="h-full w-full object-cover"
+                            onError={() =>
+                              setResearcherImageUrls((current) => ({
+                                ...current,
+                                [researcherId]: null,
+                              }))
+                            }
+                          />
+                        ) : (
+                          <User className="h-7 w-7 text-primary" />
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-foreground group-hover:text-primary">
@@ -506,7 +549,7 @@ function Home() {
                           ))}
                         </div>
                         <p className="mt-3 text-xs font-medium text-foreground">
-                          {papersByResearcher.get(researcherId) ?? 0} publicacoes
+                          {papersByResearcher.get(researcherId) ?? 0} publicações
                         </p>
                       </div>
                     </button>
@@ -519,7 +562,7 @@ function Home() {
           {visiblePublicationResults.length > 0 && (
             <div className="mt-8">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Publicacoes
+                Publicações
               </h2>
               <div className="grid grid-cols-1 gap-4">
                 {visiblePublicationResults.map((result) => (
@@ -527,20 +570,23 @@ function Home() {
                     key={`${result.result_type}-${result.id}`}
                     onClick={() => {
                       if (result.result_type === "paper") {
-                        navigate({ to: "/publicacao/paper/$id", params: { id: String(result.id) } });
+                        navigate({ to: "/publicacao/paper/$id", params: { id: String(result.id) }, search: { from: "search" } });
                       } else if (result.result_type === "conference_paper") {
                         navigate({
                           to: "/publicacao/conference-paper/$id",
                           params: { id: String(result.id) },
+                          search: { from: "search" },
                         });
                       } else {
-                        navigate({ to: "/publicacao/advising/$id", params: { id: String(result.id) } });
+                        navigate({ to: "/publicacao/advising/$id", params: { id: String(result.id) }, search: { from: "search" } });
                       }
                     }}
                     className="group flex items-start gap-4 rounded-xl border border-border/80 bg-card p-5 text-left shadow-[var(--shadow-card)] transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[var(--shadow-card-hover)]"
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-2 ring-primary/40">
-                      <FileText className="h-6 w-6 text-primary" />
+                      {result.result_type === "paper" && <FileText className="h-6 w-6 text-primary" />}
+                      {result.result_type === "conference_paper" && <Presentation className="h-6 w-6 text-primary" />}
+                      {result.result_type === "advising" && <GraduationCap className="h-6 w-6 text-primary" />}
                     </div>
                     <div className="min-w-0 flex-1">
                       <h3 className="font-semibold text-foreground group-hover:text-primary">
@@ -595,9 +641,6 @@ function Home() {
       <footer className="border-t border-border px-6 py-4 text-xs text-muted-foreground">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <span>2024 Universidade do Estado da Bahia - UNEB</span>
-          <a href="#" className="hover:text-primary">
-            Termos de uso
-          </a>
         </div>
       </footer>
     </div>

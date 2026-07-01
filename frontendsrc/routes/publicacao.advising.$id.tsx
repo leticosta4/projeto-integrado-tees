@@ -1,10 +1,13 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, GraduationCap } from "lucide-react";
+import { ArrowLeft, GraduationCap, Search } from "lucide-react";
 import { getAdvising, getResearcher, type Advising, type Researcher } from "@/lib/api";
 
 export const Route = createFileRoute("/publicacao/advising/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    from: typeof search.from === "string" ? search.from : "",
+  }),
   head: ({ params }) => ({
-    meta: [{ title: `Orientacao ${params.id} - Lattes` }],
+    meta: [{ title: `Orientação ${params.id} - Lattes` }],
   }),
   loader: async ({ params }) => {
     try {
@@ -18,7 +21,7 @@ export const Route = createFileRoute("/publicacao/advising/$id")({
   component: AdvisingPage,
   notFoundComponent: () => (
     <div className="flex min-h-screen items-center justify-center text-foreground">
-      Orientacao nao encontrada.
+      Orientação não encontrada.
     </div>
   ),
 });
@@ -39,21 +42,24 @@ function AdvisingPage() {
     advising: Advising;
     researcher: Researcher;
   };
+  const { from } = Route.useSearch();
 
   return (
     <div className="min-h-screen bg-background ml-[200px]">
-      <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center gap-4">
-          <Link
-            to="/pesquisador/$id"
-            params={{ id: String(researcher.id) }}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar para {researcher.full_name}
-          </Link>
-        </div>
-      </header>
+      {from !== "search" && (
+        <header className="border-b border-border/80 bg-card/80 px-6 py-4 backdrop-blur">
+          <div className="mx-auto flex max-w-4xl items-center gap-4">
+            <Link
+              to="/pesquisador/$id"
+              params={{ id: String(researcher.id) }}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Voltar para {researcher.full_name}
+            </Link>
+          </div>
+        </header>
+      )}
 
       <main className="mx-auto max-w-4xl px-6 py-8">
         <div className="rounded-xl border border-border/80 bg-card p-6 shadow-[var(--shadow-card)]">
@@ -63,7 +69,7 @@ function AdvisingPage() {
             </div>
             <div className="flex-1">
               <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs text-primary">
-                Orientacao
+                Orientação
               </span>
               <h1 className="mt-2 font-serif text-2xl text-foreground">{advising.title}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -90,6 +96,16 @@ function AdvisingPage() {
             <Field label="Bolsista" value={advising.had_scholarship} />
             <Field label="Agencia de Fomento" value={advising.funding_agency} />
           </dl>
+
+          <div className="mt-6 flex items-center justify-end border-t border-border pt-6">
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+            >
+              <Search className="h-4 w-4" />
+              Voltar para busca
+            </button>
+          </div>
         </div>
       </main>
 

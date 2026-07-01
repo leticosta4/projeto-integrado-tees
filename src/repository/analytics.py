@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, LiteralString, cast
 
 from psycopg_pool import ConnectionPool
@@ -72,16 +73,18 @@ class AnalyticsRepository:
                 )
                 FROM production_by_type
             ), '{{}}'::jsonb),
-            'papers_without_doi', (
-                SELECT COUNT(*)
-                FROM papers p
-                WHERE (p.doi IS NULL OR btrim(p.doi) = '')
-            ),
-            'conference_papers_without_doi', (
-                SELECT COUNT(*)
-                FROM conference_paper cp
-                WHERE (cp.doi IS NULL OR btrim(cp.doi) = '')
-            ),
+            'papers_without_doi', COALESCE((
+                SELECT COUNT(DISTINCT publication_key)
+                FROM filtered
+                WHERE type = 'paper'
+                    AND (doi IS NULL OR btrim(doi) = '')
+            ), 0),
+            'conference_papers_without_doi', COALESCE((
+                SELECT COUNT(DISTINCT publication_key)
+                FROM filtered
+                WHERE type = 'conference_paper'
+                    AND (doi IS NULL OR btrim(doi) = '')
+            ), 0),
             'duplicate_doi_groups', (
                 SELECT COUNT(*)
                 FROM (
@@ -160,9 +163,10 @@ class AnalyticsRepository:
         year_from: int | None = None,
         year_to: int | None = None,
         area: str | None = None,
-        limit: int = 10,
+        limit: int | None = 10,
     ) -> list[dict[str, Any]]:
         area_like = self._area_like(area)
+        limit_clause = "LIMIT %s" if limit is not None else ""
         sql = f"""
         WITH publication_rows AS ({self._publication_rows_cte()}),
         filtered AS (
@@ -181,12 +185,12 @@ class AnalyticsRepository:
         LEFT JOIN research_area ra ON ra.researcher_id = filtered.researcher_id
         GROUP BY COALESCE(ra.area, ra.major_area, ra.sub_area, ra.specialty, 'Area nao informada')
         ORDER BY unique_publications DESC, authorships DESC, area
-        LIMIT %s
+        {limit_clause}
         """
-        return self._fetch_all(
-            sql,
-            [year_from, year_from, year_to, year_to, list(types), area, area_like, limit],
-        )
+        params = [year_from, year_from, year_to, year_to, list(types), area, area_like]
+        if limit is not None:
+            params.append(limit)
+        return self._fetch_all(sql, params)
 
 
     def top_researchers(
@@ -195,9 +199,10 @@ class AnalyticsRepository:
         year_from: int | None = None,
         year_to: int | None = None,
         area: str | None = None,
-        limit: int = 8,
+        limit: int | None = 8,
     ) -> list[dict[str, Any]]:
         area_like = self._area_like(area)
+        limit_clause = "LIMIT %s" if limit is not None else ""
         sql = f"""
         WITH publication_rows AS ({self._publication_rows_cte()}),
         filtered AS (
@@ -216,12 +221,12 @@ class AnalyticsRepository:
         JOIN researcher r ON r.id = filtered.researcher_id
         GROUP BY r.id, r.full_name
         ORDER BY authorships DESC, unique_publications DESC, r.full_name
-        LIMIT %s
+        {limit_clause}
         """
-        return self._fetch_all(
-            sql,
-            [year_from, year_from, year_to, year_to, list(types), area, area_like, limit],
-        )
+        params = [year_from, year_from, year_to, year_to, list(types), area, area_like]
+        if limit is not None:
+            params.append(limit)
+        return self._fetch_all(sql, params)
 
 
     def coauthor_network(
@@ -302,6 +307,7 @@ class AnalyticsRepository:
                 p.id AS publication_id,
                 p.title,
                 p.year,
+                p.doi,
                 pr.researcher_id,
                 author_counts.author_count
             FROM papers p
@@ -320,6 +326,7 @@ class AnalyticsRepository:
                 cp.id AS publication_id,
                 cp.title,
                 cp.year,
+                cp.doi,
                 cpr.researcher_id,
                 author_counts.author_count
             FROM conference_paper cp
@@ -338,6 +345,7 @@ class AnalyticsRepository:
                 a.id AS publication_id,
                 a.title,
                 a.year,
+                NULL::text AS doi,
                 a.researcher_id,
                 1 AS author_count
             FROM advising a
@@ -377,7 +385,7 @@ class AnalyticsRepository:
         return f"%{area}%" if area else None
 
 
-    def _fetch_all(self, query: str, values: list[object]) -> list[dict[str, Any]]:
+    def _fetch_all(self, query: str, values: Sequence[object]) -> list[dict[str, Any]]:
         with self.pool.connection() as conn:
             with conn.cursor() as cur:
                 _ = cur.execute(cast(LiteralString, query), tuple(values))
@@ -388,6 +396,6 @@ class AnalyticsRepository:
                 return [dict(zip(columns, row)) for row in cur.fetchall()]
 
 
-    def _fetch_json(self, query: str, values: list[object]) -> dict[str, Any]:
+    def _fetch_json(self, query: str, values: Sequence[object]) -> dict[str, Any]:
         rows = self._fetch_all(query, values)
         return rows[0]["data"] if rows else {}

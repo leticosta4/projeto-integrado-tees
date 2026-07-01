@@ -1,5 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ChevronLeft, ChevronRight, Download, Menu } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Menu,
+} from "lucide-react";
 
 const PUB_TYPES = ["Paper", "Conference Paper", "Advising"] as const;
 const DEFAULT_AREA_OPTIONS = ["Todas as Areas"] as const;
@@ -21,6 +27,8 @@ export function FiltrosPanel({
   selectedArea,
   onAreaChange,
   areaOptions,
+  onExportResearchers,
+  onExportAreas,
 }: {
   showExport?: boolean;
   isOpen?: boolean;
@@ -32,6 +40,8 @@ export function FiltrosPanel({
   selectedArea?: string;
   onAreaChange?: (a: string) => void;
   areaOptions?: string[];
+  onExportResearchers?: () => void;
+  onExportAreas?: () => void;
 }) {
   if (!isOpen) {
     return (
@@ -62,7 +72,11 @@ export function FiltrosPanel({
 
   const toggleType = (type: string) => {
     if (!onTypesChange) return;
-    onTypesChange(types.includes(type) ? types.filter((item) => item !== type) : [...types, type]);
+    onTypesChange(
+      types.includes(type)
+        ? types.filter((item) => item !== type)
+        : [...types, type],
+    );
   };
 
   return (
@@ -113,7 +127,10 @@ export function FiltrosPanel({
         </label>
         <div className="space-y-1.5 text-sm">
           {PUB_TYPES.map((type) => (
-            <label key={type} className="flex items-center gap-2 text-foreground/90">
+            <label
+              key={type}
+              className="flex items-center gap-2 text-foreground/90"
+            >
               <input
                 type="checkbox"
                 checked={types.includes(type)}
@@ -148,10 +165,16 @@ export function FiltrosPanel({
             Exportar Dados
           </div>
           <div className="space-y-2">
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
+            <button
+              onClick={onExportResearchers}
+              className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary"
+            >
               Por Pesquisador <span className="text-primary">CSV</span>
             </button>
-            <button className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent">
+            <button
+              onClick={onExportAreas}
+              className="flex w-full items-center justify-between rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground hover:border-primary"
+            >
               Por Area <span className="text-primary">CSV</span>
             </button>
           </div>

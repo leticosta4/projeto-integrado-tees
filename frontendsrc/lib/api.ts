@@ -10,6 +10,19 @@ export type Researcher = {
   update_date?: string | null;
 };
 
+export type ResearcherExternalProfile = {
+  id: string;
+  lattesId: string;
+  nome: string;
+  tipo?: string | null;
+  formacaoAcademica?: string | null;
+  openAlexId?: string | null;
+  orcidId?: string | null;
+  imageUrl?: string | null;
+  indexH?: number | null;
+  indexI10?: number | null;
+};
+
 export type Paper = {
   id: number;
   title: string;
@@ -149,7 +162,8 @@ type RawSearchResult = {
 type QueryValue = string | number | boolean | null | undefined;
 
 function apiBaseUrl() {
-  const configured = (import.meta.env as { VITE_API_BASE_URL?: string }).VITE_API_BASE_URL;
+  const configured = (import.meta.env as { VITE_API_BASE_URL?: string })
+    .VITE_API_BASE_URL;
   if (configured) return configured.replace(/\/$/, "");
 
   if (typeof window === "undefined") {
@@ -173,7 +187,10 @@ function pathWithQuery(path: string, query?: Record<string, QueryValue>) {
   return `${apiBaseUrl()}${path}${qs ? `?${qs}` : ""}`;
 }
 
-async function apiFetch<T>(path: string, query?: Record<string, QueryValue>): Promise<T> {
+async function apiFetch<T>(
+  path: string,
+  query?: Record<string, QueryValue>,
+): Promise<T> {
   const response = await fetch(pathWithQuery(path, query), {
     headers: { Accept: "application/json" },
   });
@@ -191,6 +208,13 @@ export function listResearchers(query?: Record<string, QueryValue>) {
 
 export function getResearcher(id: string | number) {
   return apiFetch<Researcher>(`/researchers/${id}`);
+}
+
+export function getResearcherExternalProfile(id: string | number) {
+  return apiFetch<{
+    researcher: Researcher;
+    external_profile: ResearcherExternalProfile | null;
+  }>(`/researchers/${id}/external-profile`);
 }
 
 export function listPapers(query?: Record<string, QueryValue>) {
@@ -223,7 +247,10 @@ export function getAdvising(id: string | number) {
 
 export async function searchPapers(query: string, limit = 10) {
   try {
-    const results = await apiFetch<RawSearchResult[]>("/papers/search", { q: query, limit });
+    const results = await apiFetch<RawSearchResult[]>("/papers/search", {
+      q: query,
+      limit,
+    });
     return results.map(({ paper, score }) => ({
       paper,
       score: typeof score === "number" ? score : Number(score ?? 0),
@@ -298,7 +325,10 @@ function analyticsQuery(options?: AnalyticsOptions) {
 }
 
 export function getAnalyticsSummary(options?: AnalyticsOptions) {
-  return apiFetch<AnalyticsSummary>("/analytics/summary", analyticsQuery(options));
+  return apiFetch<AnalyticsSummary>(
+    "/analytics/summary",
+    analyticsQuery(options),
+  );
 }
 
 export function getAnalyticsPublicationsByYear(options?: AnalyticsOptions) {
@@ -327,4 +357,42 @@ export function getAnalyticsCoauthorNetwork(options?: AnalyticsOptions) {
     "/analytics/coauthor-network",
     analyticsQuery(options),
   );
+}
+
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadAnalyticsCSV(
+  type: "researchers" | "areas" | "report",
+  options?: AnalyticsOptions,
+) {
+  const query = analyticsQuery(options);
+  const params = new URLSearchParams();
+  params.set("type", type);
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined || value === null || value === "") continue;
+    params.set(key, String(value));
+  }
+  const url = `${apiBaseUrl()}/analytics/export/csv?${params.toString()}`;
+  const response = await fetch(url, {
+    headers: { Accept: "text/csv" },
+  });
+  if (!response.ok) {
+    throw new Error(`Export CSV ${response.status}: ${await response.text()}`);
+  }
+  const blob = await response.blob();
+  const filename_map: Record<string, string> = {
+    researchers: "pesquisadores.csv",
+    areas: "areas.csv",
+    report: "relatorio-analitico.csv",
+  };
+  triggerDownload(blob, filename_map[type] ?? `${type}.csv`);
 }
