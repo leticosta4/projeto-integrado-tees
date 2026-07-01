@@ -70,6 +70,9 @@ def _filters() -> tuple[dict[str, object], tuple[Any, int] | None]:
     if error:
         return {}, error
 
+    if limit is not None and limit < 0:
+        return {}, (jsonify({"error": "Query parameter 'limit' must not be negative"}), 400)
+
     return {
         "types": _parse_types(),
         "year_from": year_from,
