@@ -17,7 +17,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Portal de Pesquisa Lattes" },
-      { name: "description", content: "Busca de pesquisadores e producoes cientificas." },
+      { name: "description", content: "Busca de pesquisadores e produções científicas." },
     ],
   }),
   component: Home,
@@ -30,14 +30,14 @@ const RESULT_KINDS = ["Pesquisadores", "Publicacoes"] as const;
 type ResultKind = (typeof RESULT_KINDS)[number];
 
 const PUBLICATION_TYPE_LABELS: Record<PublicationType, string> = {
-  Paper: "Artigo de periodico",
+  Paper: "Artigo de periódico",
   "Conference Paper": "Trabalho em evento",
-  Advising: "Orientacao",
+  Advising: "Orientação",
 };
 
 const RESULT_KIND_LABELS: Record<ResultKind, string> = {
   Pesquisadores: "Pesquisadores",
-  Publicacoes: "Publicacoes",
+  Publicacoes: "Publicações",
 };
 
 const SEARCH_PAGE_SIZE = 10;
@@ -53,9 +53,9 @@ function uniqueAreas(areas: ResearchArea[]) {
 }
 
 function resultTypeLabel(type: UnifiedSearchResult["result_type"]) {
-  if (type === "paper") return "Artigo de periodico";
+  if (type === "paper") return "Artigo de periódico";
   if (type === "conference_paper") return "Trabalho em evento";
-  if (type === "advising") return "Orientacao";
+  if (type === "advising") return "Orientação";
   return "Pesquisador";
 }
 
@@ -192,7 +192,7 @@ function Home() {
         if (active) {
           setSearchResults([]);
           setHasMoreResults(false);
-          setError(err instanceof Error ? err.message : "Erro ao buscar publicacoes.");
+          setError(err instanceof Error ? err.message : "Erro ao buscar publicações.");
         }
       } finally {
         if (active) setSearching(false);
@@ -295,7 +295,7 @@ function Home() {
         </div>
         <div>
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
-            Tipo de Publicacao
+            Tipo de Publicação
           </label>
           <div
             className={`grid grid-cols-1 gap-1.5 text-sm transition-opacity ${
@@ -337,14 +337,14 @@ function Home() {
         </div>
         <div>
           <label className="mb-2 block text-xs font-medium text-muted-foreground">
-            Area de Pesquisa
+            Área de Pesquisa
           </label>
           <select
             value={selectedArea}
             onChange={(e) => setSelectedArea(e.target.value)}
             className="w-full rounded-md border border-border bg-input px-2 py-1.5 text-sm text-foreground transition-colors focus:border-primary focus:outline-none"
           >
-            <option value="">Todas as areas</option>
+            <option value="">Todas as áreas</option>
             {areaOptions.map((area) => (
               <option key={area} value={area}>
                 {area}
@@ -373,7 +373,7 @@ function Home() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Buscar pesquisador, area ou publicacao"
+                  placeholder="Buscar pesquisador, área ou publicação"
                   className="w-full rounded-full border border-border bg-input py-2 pl-4 pr-10 text-sm text-foreground shadow-sm transition-colors focus:border-primary focus:outline-none"
                 />
                 <button
@@ -416,7 +416,7 @@ function Home() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Buscar pesquisador, area ou publicacao..."
+                placeholder="Buscar pesquisador, área ou publicação..."
                 className="w-full rounded-full border border-border bg-input py-3 pl-5 pr-12 text-foreground shadow-[var(--shadow-card)] placeholder:text-muted-foreground transition-colors focus:border-primary focus:outline-none"
               />
               <button
@@ -493,7 +493,7 @@ function Home() {
                           ))}
                         </div>
                         <p className="mt-3 text-xs font-medium text-foreground">
-                          {papersByResearcher.get(researcherId) ?? 0} publicacoes
+                          {papersByResearcher.get(researcherId) ?? 0} publicações
                         </p>
                       </div>
                     </button>
@@ -506,7 +506,7 @@ function Home() {
           {visiblePublicationResults.length > 0 && (
             <div className="mt-8">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Publicacoes
+                Publicações
               </h2>
               <div className="grid grid-cols-1 gap-4">
                 {visiblePublicationResults.map((result) => (
@@ -585,9 +585,6 @@ function Home() {
       <footer className="border-t border-border px-6 py-4 text-xs text-muted-foreground">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <span>2024 Universidade do Estado da Bahia - UNEB</span>
-          <a href="#" className="hover:text-primary">
-            Termos de uso
-          </a>
         </div>
       </footer>
     </div>
