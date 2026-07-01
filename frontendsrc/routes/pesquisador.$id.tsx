@@ -4,7 +4,7 @@ import {
   notFound,
   useNavigate,
 } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BarChart3, Download, User } from "lucide-react";
 import { FiltrosPanel } from "@/components/FiltrosPanel";
 import {
@@ -88,10 +88,19 @@ type PublicationItem =
   | { kind: "conference-paper"; data: ConferencePaper }
   | { kind: "advising"; data: Advising };
 
+const PROFILE_PUBLICATION_TYPES = ["Paper", "Conference Paper", "Advising"];
+const DEFAULT_AREA_OPTION = "Todas as Areas";
+
 function publicationLabel(kind: PublicationItem["kind"]) {
   if (kind === "paper") return "Paper";
   if (kind === "conference-paper") return "Conference Paper";
   return "Orientacao";
+}
+
+function publicationTypeName(kind: PublicationItem["kind"]) {
+  if (kind === "paper") return "Paper";
+  if (kind === "conference-paper") return "Conference Paper";
+  return "Advising";
 }
 
 function publicationSecondary(item: PublicationItem): string {
@@ -159,8 +168,6 @@ function ResearcherProfile() {
       conferencePapers: ConferencePaper[];
       advisings: Advising[];
     };
-  const [filtersOpen, setFiltersOpen] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(20);
   const navigate = useNavigate();
 
   const allPublications: PublicationItem[] = [
@@ -172,14 +179,70 @@ function ResearcherProfile() {
     ...advisings.map((data) => ({ kind: "advising" as const, data })),
   ].sort((a, b) => (b.data.year ?? 0) - (a.data.year ?? 0));
 
-  const totalPublications = allPublications.length;
-  const visiblePublications = allPublications.slice(0, visibleCount);
+  const publicationYears = allPublications
+    .map((item) => item.data.year)
+    .filter((year): year is number => typeof year === "number");
+  const initialYearFrom = publicationYears.length ? Math.min(...publicationYears) : 1900;
+  const initialYearTo = publicationYears.length
+    ? Math.max(...publicationYears)
+    : new Date().getFullYear();
+
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(20);
+  const [yearRange, setYearRange] = useState({
+    from: initialYearFrom,
+    to: initialYearTo,
+  });
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([
+    ...PROFILE_PUBLICATION_TYPES,
+  ]);
+  const [selectedArea, setSelectedArea] = useState(DEFAULT_AREA_OPTION);
+
+  const areaOptions = useMemo(() => {
+    const labels = Array.from(new Set(areas.map(areaLabel))).sort();
+    return [DEFAULT_AREA_OPTION, ...labels];
+  }, [areas]);
+
+  const areaMatches =
+    selectedArea === DEFAULT_AREA_OPTION ||
+    areaOptions.includes(selectedArea);
+
+  const filteredPublications = allPublications.filter((item) => {
+    const year = item.data.year;
+    const matchesYear =
+      typeof year === "number" &&
+      (year >= yearRange.from && year <= yearRange.to);
+    const matchesType = selectedTypes.includes(publicationTypeName(item.kind));
+
+    return matchesYear && matchesType && areaMatches;
+  });
+
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [selectedArea, selectedTypes, yearRange]);
+
+  const filteredPapers = filteredPublications.filter((item) => item.kind === "paper");
+  const filteredConferencePapers = filteredPublications.filter(
+    (item) => item.kind === "conference-paper",
+  );
+  const filteredAdvisings = filteredPublications.filter(
+    (item) => item.kind === "advising",
+  );
+  const totalPublications = filteredPublications.length;
+  const visiblePublications = filteredPublications.slice(0, visibleCount);
 
   return (
     <div className="min-h-screen bg-background">
       <FiltrosPanel
         isOpen={filtersOpen}
         onToggle={() => setFiltersOpen((value) => !value)}
+        yearRange={yearRange}
+        onYearRangeChange={setYearRange}
+        selectedTypes={selectedTypes}
+        onTypesChange={setSelectedTypes}
+        selectedArea={selectedArea}
+        onAreaChange={setSelectedArea}
+        areaOptions={areaOptions}
       />
       <main
         className={`ml-[200px] ${filtersOpen ? "mr-[250px]" : "mr-[40px]"} px-8 py-8`}
@@ -216,19 +279,19 @@ function ResearcherProfile() {
           <div className="mt-2 flex gap-6">
             <div>
               <p className="font-serif text-4xl text-foreground">
-                {papers.length}
+                {filteredPapers.length}
               </p>
               <p className="text-xs text-muted-foreground">Papers</p>
             </div>
             <div>
               <p className="font-serif text-4xl text-foreground">
-                {conferencePapers.length}
+                {filteredConferencePapers.length}
               </p>
               <p className="text-xs text-muted-foreground">Conference Papers</p>
             </div>
             <div>
               <p className="font-serif text-4xl text-foreground">
-                {advisings.length}
+                {filteredAdvisings.length}
               </p>
               <p className="text-xs text-muted-foreground">Orientacoes</p>
             </div>
@@ -263,7 +326,7 @@ function ResearcherProfile() {
               Producoes Cientificas
             </h2>
             <button
-              onClick={() => exportPublicationsCSV(allPublications)}
+              onClick={() => exportPublicationsCSV(filteredPublications)}
               className="flex items-center gap-1.5 rounded-md border border-border bg-secondary px-3 py-1.5 text-xs text-foreground transition-colors hover:border-primary hover:bg-accent"
             >
               <Download className="h-3.5 w-3.5" /> Exportar CSV

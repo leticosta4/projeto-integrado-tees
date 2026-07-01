@@ -73,16 +73,18 @@ class AnalyticsRepository:
                 )
                 FROM production_by_type
             ), '{{}}'::jsonb),
-            'papers_without_doi', (
-                SELECT COUNT(*)
-                FROM papers p
-                WHERE (p.doi IS NULL OR btrim(p.doi) = '')
-            ),
-            'conference_papers_without_doi', (
-                SELECT COUNT(*)
-                FROM conference_paper cp
-                WHERE (cp.doi IS NULL OR btrim(cp.doi) = '')
-            ),
+            'papers_without_doi', COALESCE((
+                SELECT COUNT(DISTINCT publication_key)
+                FROM filtered
+                WHERE type = 'paper'
+                    AND (doi IS NULL OR btrim(doi) = '')
+            ), 0),
+            'conference_papers_without_doi', COALESCE((
+                SELECT COUNT(DISTINCT publication_key)
+                FROM filtered
+                WHERE type = 'conference_paper'
+                    AND (doi IS NULL OR btrim(doi) = '')
+            ), 0),
             'duplicate_doi_groups', (
                 SELECT COUNT(*)
                 FROM (
@@ -305,6 +307,7 @@ class AnalyticsRepository:
                 p.id AS publication_id,
                 p.title,
                 p.year,
+                p.doi,
                 pr.researcher_id,
                 author_counts.author_count
             FROM papers p
@@ -323,6 +326,7 @@ class AnalyticsRepository:
                 cp.id AS publication_id,
                 cp.title,
                 cp.year,
+                cp.doi,
                 cpr.researcher_id,
                 author_counts.author_count
             FROM conference_paper cp
@@ -341,6 +345,7 @@ class AnalyticsRepository:
                 a.id AS publication_id,
                 a.title,
                 a.year,
+                NULL::text AS doi,
                 a.researcher_id,
                 1 AS author_count
             FROM advising a
