@@ -63,10 +63,12 @@ function areaLabel(area: ResearchArea) {
 }
 
 function researcherDescription(researcher: Researcher) {
+  const firstCitationName = researcher.citation_name
+    ? researcher.citation_name.split(";")[0].trim()
+    : null;
+
   const parts = [
-    researcher.citation_name
-      ? `Nome em citacoes: ${researcher.citation_name}`
-      : null,
+    firstCitationName ? `Nome em citacoes: ${firstCitationName}` : null,
     researcher.nationality ? `Nacionalidade: ${researcher.nationality}` : null,
     researcher.birth_state
       ? `UF de nascimento: ${researcher.birth_state}`
@@ -131,16 +133,19 @@ function navigateToPublication(
     navigate({
       to: "/publicacao/paper/$id",
       params: { id: String(item.data.id) },
+      search: { from: "" },
     });
   } else if (item.kind === "conference-paper") {
     navigate({
       to: "/publicacao/conference-paper/$id",
       params: { id: String(item.data.id) },
+      search: { from: "" },
     });
   } else {
     navigate({
       to: "/publicacao/advising/$id",
       params: { id: String(item.data.id) },
+      search: { from: "" },
     });
   }
 }

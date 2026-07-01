@@ -531,6 +531,7 @@ function ModuloAnalitico() {
         <div className="mt-6 flex items-center gap-3">
           <Link
             to="/"
+            search={{ q: undefined }}
             className="rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:border-primary hover:bg-accent"
           >
             Voltar ao Inicio
