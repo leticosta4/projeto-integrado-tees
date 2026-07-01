@@ -7,7 +7,7 @@ export const Route = createFileRoute("/publicacao/advising/$id")({
     from: typeof search.from === "string" ? search.from : "",
   }),
   head: ({ params }) => ({
-    meta: [{ title: `Orientacao ${params.id} - Lattes` }],
+    meta: [{ title: `Orientação ${params.id} - Lattes` }],
   }),
   loader: async ({ params }) => {
     try {
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/publicacao/advising/$id")({
   component: AdvisingPage,
   notFoundComponent: () => (
     <div className="flex min-h-screen items-center justify-center text-foreground">
-      Orientacao nao encontrada.
+      Orientação não encontrada.
     </div>
   ),
 });
@@ -69,7 +69,7 @@ function AdvisingPage() {
             </div>
             <div className="flex-1">
               <span className="rounded-full bg-primary/15 px-2.5 py-0.5 text-xs text-primary">
-                Orientacao
+                Orientação
               </span>
               <h1 className="mt-2 font-serif text-2xl text-foreground">{advising.title}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
