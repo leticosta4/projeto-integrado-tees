@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Download, Maximize2 } from "lucide-react";
+import { Download} from "lucide-react";
 import { FiltrosPanel } from "@/components/FiltrosPanel";
 import {
   downloadAnalyticsCSV,
@@ -20,7 +20,7 @@ import {
 
 export const Route = createFileRoute("/modulo-analitico")({
   head: () => ({
-    meta: [{ title: "Modulo Analitico - Lattes" }],
+    meta: [{ title: "Módulo Analítico - Lattes" }],
   }),
   component: ModuloAnalitico,
 });
@@ -53,7 +53,7 @@ function areaLabel(area: ResearchArea) {
     area.major_area ??
     area.sub_area ??
     area.specialty ??
-    "Area nao informada"
+    "Área não informada"
   );
 }
 
@@ -65,8 +65,8 @@ function typeParam(type: string) {
 
 function typeLabel(type: string) {
   if (type === "conference_paper") return "Trabalho em evento";
-  if (type === "advising") return "Orientacao";
-  return "Artigo de periodico";
+  if (type === "advising") return "Orientação";
+  return "Artigo de periódico";
 }
 
 function buildYearRows(rows: AnalyticsYearRow[]) {
@@ -266,12 +266,12 @@ function ModuloAnalitico() {
           {[
             { label: "PESQUISADORES", value: summary.total_researchers },
             {
-              label: "PRODUCOES UNICAS",
+              label: "PRODUÇÕES ÚNICAS",
               value: summary.total_unique_publications,
             },
             { label: "AUTORIAS", value: summary.total_authorships },
             {
-              label: "PRODUCOES COLABORATIVAS",
+              label: "PRODUÇÕES COLABORATIVAS",
               value: summary.collaborative_publications,
             },
             { label: "COAUTORIAS INTERNAS", value: internalCoauthorships },
@@ -301,11 +301,8 @@ function ModuloAnalitico() {
         <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">
-              Producoes por tipo
+              Produções por tipo
             </h3>
-            <button className="text-muted-foreground hover:text-primary">
-              <Maximize2 className="h-4 w-4" />
-            </button>
           </div>
           <div className="grid grid-cols-3 gap-3">
             {Object.entries(summary.productions_by_type).map(
@@ -329,7 +326,7 @@ function ModuloAnalitico() {
             {!loading &&
               Object.keys(summary.productions_by_type).length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Nenhuma producao para os filtros atuais.
+                  Nenhuma produção para os filtros atuais.
                 </p>
               )}
           </div>
@@ -340,9 +337,6 @@ function ModuloAnalitico() {
             <h3 className="font-semibold text-foreground">
               Pesquisadores mais produtivos
             </h3>
-            <button className="text-muted-foreground hover:text-primary">
-              <Maximize2 className="h-4 w-4" />
-            </button>
           </div>
           <div className="space-y-3">
             {topResearchers.map((bar) => (
@@ -375,11 +369,8 @@ function ModuloAnalitico() {
         <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-semibold text-foreground">
-              Producoes por area
+              Produções por área
             </h3>
-            <button className="text-muted-foreground hover:text-primary">
-              <Maximize2 className="h-4 w-4" />
-            </button>
           </div>
           <div className="flex items-center gap-8">
             <Donut segments={donutSegments} />
@@ -403,7 +394,7 @@ function ModuloAnalitico() {
               ))}
               {!loading && donutSegments.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Nenhuma area encontrada.
+                  Nenhuma área encontrada.
                 </p>
               )}
             </div>
@@ -412,16 +403,13 @@ function ModuloAnalitico() {
 
         <section className="mt-6 rounded-xl border border-border/80 bg-card p-5 shadow-[var(--shadow-card)]">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-foreground">Producoes por ano</h3>
-            <button className="text-muted-foreground hover:text-primary">
-              <Maximize2 className="h-4 w-4" />
-            </button>
+            <h3 className="font-semibold text-foreground">Produções por ano</h3>
           </div>
           <div className="mb-3 flex flex-wrap gap-3 text-xs">
             {[
-              { label: "Artigo de periodico", color: "var(--chart-1)" },
+              { label: "Artigo de periódico", color: "var(--chart-1)" },
               { label: "Trabalho em evento", color: "var(--chart-2)" },
-              { label: "Orientacao", color: "var(--chart-3)" },
+              { label: "Orientação", color: "var(--chart-3)" },
             ].map((item) => (
               <span
                 key={item.label}
@@ -493,9 +481,6 @@ function ModuloAnalitico() {
             <h3 className="font-semibold text-foreground">
               Coautorias internas
             </h3>
-            <button className="text-muted-foreground hover:text-primary">
-              <Maximize2 className="h-4 w-4" />
-            </button>
           </div>
           <div className="space-y-2">
             {coauthorNetwork.edges.slice(0, 8).map((edge) => {
@@ -534,7 +519,7 @@ function ModuloAnalitico() {
             search={{ q: undefined }}
             className="rounded-md border border-border bg-secondary px-4 py-2 text-sm text-foreground transition-colors hover:border-primary hover:bg-accent"
           >
-            Voltar ao Inicio
+            Voltar ao Início
           </Link>
           <button
             onClick={() =>
@@ -554,9 +539,6 @@ function ModuloAnalitico() {
 
         <footer className="mt-10 flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
           <span>2024 Universidade do Estado da Bahia - UNEB</span>
-          <a href="#" className="hover:text-primary">
-            Termos de uso
-          </a>
         </footer>
       </main>
     </div>
