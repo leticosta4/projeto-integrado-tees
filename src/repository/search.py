@@ -86,8 +86,17 @@ class SearchRepository:
 
         if "researchers" in result_kinds:
             subqueries.append(self._researcher_query())
+            text_params = self._text_params(text_values)
             values.extend(
-                self._text_params(text_values)
+                text_params[:3]
+                + [
+                    year_from,
+                    year_from,
+                    year_to,
+                    year_to,
+                    list(types),
+                ]
+                + text_params[3:]
                 + [
                     researcher_id,
                     researcher_id,
@@ -540,6 +549,71 @@ class SearchRepository:
                         )
                         FROM research_area ra
                         WHERE ra.researcher_id = r.id
+                    ),
+                    (
+                        SELECT string_agg(publication_text.text, ' ')
+                        FROM (
+                            SELECT
+                                p.year,
+                                'paper' AS type,
+                                concat_ws(
+                                    ' ',
+                                    p.title,
+                                    p.doi,
+                                    p.journal,
+                                    p.issn,
+                                    p.nature,
+                                    p.language,
+                                    p.country
+                                ) AS text
+                            FROM papers p
+                            JOIN paper_researcher pr ON pr.paper_id = p.id
+                            WHERE pr.researcher_id = r.id
+
+                            UNION ALL
+
+                            SELECT
+                                cp.year,
+                                'conference_paper' AS type,
+                                concat_ws(
+                                    ' ',
+                                    cp.title,
+                                    cp.doi,
+                                    cp.event_name,
+                                    cp.event_city,
+                                    cp.event_classification,
+                                    cp.proceedings_title,
+                                    cp.isbn,
+                                    cp.nature,
+                                    cp.language,
+                                    cp.country
+                                ) AS text
+                            FROM conference_paper cp
+                            JOIN conference_paper_researcher cpr
+                                ON cpr.conference_paper_id = cp.id
+                            WHERE cpr.researcher_id = r.id
+
+                            UNION ALL
+
+                            SELECT
+                                a.year,
+                                'advising' AS type,
+                                concat_ws(
+                                    ' ',
+                                    a.title,
+                                    a.level,
+                                    a.advisee_name,
+                                    a.advising_type,
+                                    a.institution,
+                                    a.course,
+                                    a.country
+                                ) AS text
+                            FROM advising a
+                            WHERE a.researcher_id = r.id
+                        ) publication_text
+                        WHERE (%s::integer IS NULL OR publication_text.year >= %s::integer)
+                            AND (%s::integer IS NULL OR publication_text.year <= %s::integer)
+                            AND publication_text.type = ANY(%s::text[])
                     )
                 ) AS text,
                 COALESCE((
