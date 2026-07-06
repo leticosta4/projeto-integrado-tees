@@ -90,6 +90,34 @@ services:
     network_mode: host
     <<: *dev
 
+  tees-server-prod:
+    build: .
+    command: ["uv", "run", "src/app.py"]
+    depends_on:
+      - tees-pgvector
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      PG_HOST: tees-pgvector
+      PG_PORT: 5432
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-any}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-any}
+      DIMENSIONS: ${DIMENSIONS:-128}
+    networks:
+      - tees-network
+
+  tees-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    depends_on:
+      - tees-server-prod
+    ports:
+      - "3000:3000"
+    networks:
+      - tees-network
+
 volumes:
   tees_data:
 

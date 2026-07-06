@@ -170,10 +170,8 @@ function apiBaseUrl() {
     return "http://localhost:5000";
   }
 
-  if (window.location.port && window.location.port !== "5000") {
-    return "http://localhost:5000";
-  }
-
+  // In browser, return empty string for relative paths
+  // which will be proxied by our server.js.
   return "";
 }
 

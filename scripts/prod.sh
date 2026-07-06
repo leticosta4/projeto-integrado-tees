@@ -7,7 +7,7 @@ cleanup() {
 	local exit_code=$?
 	if [[ $exit_code -ne 0 ]]; then
 		echo "[ERROR] $exit_code, bringing down services..."
-		docker compose down --remove-orphans
+		docker compose down --rmi local --remove-orphans -v
 	fi
 	exit "$exit_code"
 }
@@ -18,7 +18,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 echo "[INFO] Clearing environment (orphans only)"
-docker compose down --remove-orphans
+docker compose down --rmi local --remove-orphans -v
 
 echo "[INFO] Building images..."
 docker compose build
@@ -32,5 +32,5 @@ docker compose run --rm tees-migrations
 echo "[INFO] Starting ingestion..."
 docker compose run --rm tees-etl
 
-echo "[INFO] Running Flask service..."
-docker compose run --rm tees-server
+echo "[INFO] Running Production services..."
+docker compose up -d tees-server-prod tees-frontend

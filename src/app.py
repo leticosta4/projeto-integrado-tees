@@ -36,6 +36,8 @@ def create_app():
             "http://127.0.0.1:5173",
             "http://localhost:8080",
             "http://127.0.0.1:8080",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
         }
         if origin in allowed_origins:
             response.headers["Access-Control-Allow-Origin"] = origin
@@ -107,4 +109,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
