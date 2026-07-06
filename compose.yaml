@@ -138,8 +138,14 @@ services:
   tees-server-prod:
     build: .
     command: ["uv", "run", "src/app.py"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import socket; s = socket.socket(); s.connect((\"localhost\", 5000)); s.close()' || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     depends_on:
-      - tees-pgvector-prod
+      tees-pgvector-prod:
+        condition: service_healthy
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
@@ -157,7 +163,8 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     depends_on:
-      - tees-server-prod
+      tees-server-prod:
+        condition: service_healthy
     ports:
       - "3000:3000"
     networks:
