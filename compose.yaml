@@ -72,17 +72,62 @@ services:
     networks:
       - tees-network
 
+  tees-pgvector-prod:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    volumes:
+      - tees_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    networks:
+      - tees-network
+
   tees-migrations:
     build: .
     command: ["uv", "run", "src/migrate.py"]
     network_mode: host
     <<: *dev
 
+  tees-migrations-prod:
+    build: .
+    command: ["uv", "run", "src/migrate.py"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      PG_HOST: tees-pgvector-prod
+      PG_PORT: 5432
+    networks:
+      - tees-network
+    depends_on:
+      - tees-pgvector-prod
+
   tees-etl:
     build: .
     command: ["uv", "run", "src/ingest.py"]
     network_mode: host
     <<: *dev
+
+  tees-etl-prod:
+    build: .
+    command: ["uv", "run", "src/ingest.py"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      PG_HOST: tees-pgvector-prod
+      PG_PORT: 5432
+    networks:
+      - tees-network
+    depends_on:
+      - tees-pgvector-prod
 
   tees-server:
     build: .
@@ -94,12 +139,12 @@ services:
     build: .
     command: ["uv", "run", "src/app.py"]
     depends_on:
-      - tees-pgvector
+      - tees-pgvector-prod
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
       POSTGRES_DB: ${POSTGRES_DB:-postgres}
-      PG_HOST: tees-pgvector
+      PG_HOST: tees-pgvector-prod
       PG_PORT: 5432
       GOOGLE_API_KEY: ${GOOGLE_API_KEY:-any}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-any}
@@ -120,6 +165,7 @@ services:
 
 volumes:
   tees_data:
+  tees_data_prod:
 
 networks:
   tees-network:

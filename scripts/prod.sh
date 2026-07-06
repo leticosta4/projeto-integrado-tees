@@ -24,13 +24,13 @@ echo "[INFO] Building images..."
 docker compose build
 
 echo "[INFO] Starting database..."
-docker compose up --wait tees-pgvector
+docker compose up --wait tees-pgvector-prod
 
 echo "[INFO] Running migrations..."
-docker compose run --rm tees-migrations
+docker compose run --rm tees-migrations-prod
 
 echo "[INFO] Starting ingestion..."
-docker compose run --rm tees-etl
+docker compose run --rm tees-etl-prod
 
 echo "[INFO] Running Production services..."
 docker compose up -d tees-server-prod tees-frontend
